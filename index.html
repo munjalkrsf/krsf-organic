@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>KRSF Organic — Field App</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D2B6B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KRSF Organic">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D2B6B;
+  --navy-mid: #1B4F9A;
+  --navy-lt: #E6F1FB;
+  --gold: #C8A84B;
+  --gold-lt: #FFF8E1;
+  --green: #1B5E20;
+  --green-mid: #2E7D32;
+  --green-lt: #E8F5E9;
+  --amber: #E65100;
+  --amber-lt: #FBE9E7;
+  --red: #C62828;
+  --red-lt: #FFEBEE;
+  --grey: #37474F;
+  --grey-lt: #F5F7FA;
+  --border: #E0E6EF;
+  --text: #1A2332;
+  --text-2: #5A6A7A;
+  --text-3: #9AAABB;
+  --white: #FFFFFF;
+  --card: #FFFFFF;
+  --bg: #F0F4FA;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(13,43,107,0.08);
+  --shadow-lg: 0 8px 32px rgba(13,43,107,0.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── APP SHELL ── */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+
+.app-header {
+  background: var(--navy);
+  padding: 14px 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.app-header h1 { color: var(--white); font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+.app-header p { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 1px; }
+.header-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,0.25);
+}
+
+.screen { flex: 1; overflow-y: auto; padding-bottom: 80px; display: none; }
+.screen.active { display: block; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: var(--white); border-top: 1px solid var(--border);
+  display: flex; z-index: 100;
+  box-shadow: 0 -4px 20px rgba(13,43,107,0.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 4px 12px; cursor: pointer; border: none; background: none;
+  color: var(--text-3); font-family: inherit; font-size: 10px; font-weight: 500;
+  transition: color 0.2s;
+  gap: 4px;
+}
+.nav-btn.active { color: var(--navy); }
+.nav-btn svg { width: 22px; height: 22px; }
+.nav-btn.active svg path, .nav-btn.active svg rect, .nav-btn.active svg circle { stroke: var(--navy); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* ── BADGES ── */
+.badge {
+  display: inline-block; padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.badge-done    { background: var(--green-lt); color: var(--green); }
+.badge-prog    { background: var(--gold-lt);  color: #7D5A00; }
+.badge-todo    { background: var(--grey-lt);  color: var(--text-3); }
+.badge-drop    { background: var(--red-lt);   color: var(--red); }
+.badge-navy    { background: var(--navy-lt);  color: var(--navy-mid); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap { background: var(--border); border-radius: 4px; height: 5px; }
+.progress-fill { height: 5px; border-radius: 4px; background: var(--green-mid); transition: width 0.4s; }
+
+/* ══════════════════════════════════
+   SCREEN 1: HOME — MY FARMERS
+══════════════════════════════════ */
+#home {
+  padding: 16px;
+}
+.home-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; margin-bottom: 18px;
+}
+.stat-card {
+  background: var(--card); border-radius: var(--radius-sm);
+  border: 1px solid var(--border); padding: 12px 10px;
+  text-align: center;
+}
+.stat-num { font-size: 22px; font-weight: 600; color: var(--navy); font-family: 'DM Mono', monospace; }
+.stat-lbl { font-size: 10px; color: var(--text-2); margin-top: 2px; }
+
+.filter-row { display: flex; gap: 7px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-chip {
+  padding: 6px 13px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-2);
+  cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+.filter-chip.active {
+  background: var(--navy); color: var(--white); border-color: var(--navy);
+}
+
+.section-title { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+
+.farmer-list { display: flex; flex-direction: column; gap: 10px; }
+
+.farmer-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 14px 16px;
+  cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow);
+}
+.farmer-card:active { transform: scale(0.98); box-shadow: none; }
+.farmer-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.farmer-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.farmer-meta { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+.farmer-id-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); margin-top: 1px; }
+.farmer-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.step-count { font-size: 11px; color: var(--text-2); }
+.step-count span { color: var(--navy); font-weight: 600; }
+.current-step-label { font-size: 11px; color: var(--text-3); font-style: italic; }
+
+/* ══════════════════════════════════
+   SCREEN 2: FARMER DETAIL
+══════════════════════════════════ */
+#detail { padding: 0; }
+.detail-hero {
+  background: var(--navy); padding: 20px 20px 24px;
+  position: relative;
+}
+.detail-back {
+  display: flex; align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.7); font-size: 13px; cursor: pointer;
+  margin-bottom: 14px; width: fit-content;
+}
+.detail-back:hover { color: white; }
+.detail-name { color: white; font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+.detail-meta { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; }
+.detail-tags { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+.detail-tag {
+  background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85);
+  font-size: 11px; padding: 3px 9px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.detail-progress {
+  background: rgba(255,255,255,0.08); border-radius: 10px;
+  padding: 12px 16px; margin-top: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.detail-prog-text { color: rgba(255,255,255,0.7); font-size: 12px; }
+.detail-prog-num { color: white; font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+.detail-body { padding: 16px; }
+
+.steps-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+.step-item {
+  background: var(--card); border-radius: var(--radius-sm);
+  border: 1px solid var(--border); padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: all 0.15s;
+}
+.step-item:active { transform: scale(0.99); }
+.step-item.done { border-left: 3px solid var(--green-mid); }
+.step-item.in-progress { border-left: 3px solid var(--gold); }
+.step-item.dropped { border-left: 3px solid var(--red); opacity: 0.7; }
+
+.step-circle {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+}
+.step-circle.done { background: var(--green-lt); color: var(--green); }
+.step-circle.in-progress { background: var(--gold-lt); color: #7D5A00; }
+.step-circle.not-started { background: var(--grey-lt); color: var(--text-3); }
+.step-circle.dropped { background: var(--red-lt); color: var(--red); }
+
+.step-info { flex: 1; }
+.step-item-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.step-item-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.step-chevron { color: var(--text-3); font-size: 16px; }
+
+.survey-section { margin-top: 4px; }
+.survey-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.survey-item { background: var(--grey-lt); border-radius: var(--radius-sm); padding: 10px 12px; }
+.survey-lbl { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+.survey-val { font-size: 13px; font-weight: 500; color: var(--text); margin-top: 2px; }
+
+/* ══════════════════════════════════
+   SCREEN 3: LOG UPDATE FORM
+══════════════════════════════════ */
+#log { padding: 0; }
+.log-hero {
+  background: var(--navy); padding: 20px 20px 20px;
+}
+.log-hero h2 { color: white; font-size: 18px; font-weight: 600; }
+.log-hero p { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; }
+
+.log-body { padding: 16px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.form-select, .form-textarea {
+  width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+  transition: border-color 0.15s; appearance: none; -webkit-appearance: none;
+  outline: none;
+}
+.form-select:focus, .form-textarea:focus { border-color: var(--navy); }
+.form-textarea { resize: none; height: 80px; }
+
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  border: 5px solid transparent; border-top-color: var(--text-2); pointer-events: none;
+}
+
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.status-btn {
+  padding: 12px; border-radius: var(--radius-sm); border: 2px solid var(--border);
+  background: var(--white); cursor: pointer; text-align: center; transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.status-btn .s-icon { font-size: 18px; margin-bottom: 4px; }
+.status-btn .s-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.status-btn.sel-done    { border-color: var(--green-mid); background: var(--green-lt); }
+.status-btn.sel-done .s-label { color: var(--green); }
+.status-btn.sel-prog    { border-color: var(--gold); background: var(--gold-lt); }
+.status-btn.sel-prog .s-label { color: #7D5A00; }
+.status-btn.sel-not     { border-color: var(--text-3); background: var(--grey-lt); }
+.status-btn.sel-not .s-label  { color: var(--text-3); }
+.status-btn.sel-drop    { border-color: var(--red); background: var(--red-lt); }
+.status-btn.sel-drop .s-label { color: var(--red); }
+
+.photo-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s;
+  background: var(--grey-lt);
+}
+.photo-zone:hover { border-color: var(--navy); background: var(--navy-lt); }
+.photo-zone.has-photo { border-style: solid; border-color: var(--green-mid); background: var(--green-lt); }
+.photo-icon-wrap { width: 44px; height: 44px; border-radius: 12px; background: var(--navy-lt); margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+.photo-zone.has-photo .photo-icon-wrap { background: var(--green-lt); }
+.photo-zone p { font-size: 12px; color: var(--text-2); }
+.photo-zone.has-photo p { color: var(--green); font-weight: 500; }
+.photo-filename { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); margin-top: 4px; }
+#photo-input { display: none; }
+
+.submit-btn {
+  width: 100%; padding: 15px; border-radius: var(--radius-sm);
+  background: var(--navy); color: white; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; margin-top: 8px;
+  letter-spacing: -0.2px;
+}
+.submit-btn:active { transform: scale(0.98); background: var(--navy-mid); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.step-tip {
+  background: var(--navy-lt); border-radius: var(--radius-sm);
+  padding: 12px 14px; border-left: 3px solid var(--navy);
+  margin-bottom: 16px;
+}
+.step-tip-title { font-size: 11px; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.step-tip-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+/* ══════════════════════════════════
+   SCREEN 4: DASHBOARD (PM VIEW)
+══════════════════════════════════ */
+#dashboard { padding: 16px; }
+
+.dash-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.kpi-card {
+  border-radius: var(--radius); padding: 16px; border: 1px solid var(--border);
+}
+.kpi-card.navy  { background: var(--navy); }
+.kpi-card.green { background: var(--green); }
+.kpi-card.amber { background: var(--amber); }
+.kpi-card.gold  { background: #7B5E0A; }
+.kpi-num { font-size: 30px; font-weight: 600; color: white; font-family: 'DM Mono', monospace; line-height: 1; }
+.kpi-lbl { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 5px; }
+
+.step-progress-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 16px; margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.step-prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.step-prog-label { font-size: 12px; font-weight: 500; flex: 1; color: var(--text); }
+.step-prog-pct { font-size: 12px; font-weight: 600; color: var(--navy); font-family: 'DM Mono', monospace; min-width: 32px; text-align: right; }
+.step-prog-bar { background: var(--border); border-radius: 4px; height: 6px; margin-bottom: 2px; }
+.step-prog-fill { height: 6px; border-radius: 4px; transition: width 0.6s; }
+
+.recent-log { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.log-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.log-item:last-child { border-bottom: none; }
+.log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.log-dot.done { background: var(--green-mid); }
+.log-dot.prog { background: var(--gold); }
+.log-dot.drop { background: var(--red); }
+.log-text { flex: 1; font-size: 12px; color: var(--text); }
+.log-text span { color: var(--text-2); }
+.log-time { font-size: 10px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+
+/* ══════════════════════════════════
+   SUCCESS TOAST
+══════════════════════════════════ */
+.toast {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%) translateY(-20px);
+  background: var(--green); color: white; padding: 10px 20px; border-radius: 30px;
+  font-size: 13px; font-weight: 500; z-index: 999; opacity: 0;
+  transition: all 0.3s; pointer-events: none; white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(27,94,32,0.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════
+   STEP DETAIL MODAL
+══════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(13,43,107,0.5);
+  z-index: 200; display: none; align-items: flex-end;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: var(--white); border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 430px; margin: 0 auto;
+  padding: 20px; max-height: 80vh; overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.modal-sub { font-size: 12px; color: var(--text-2); margin-bottom: 16px; }
+.modal-section-hdr { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin: 12px 0 6px; }
+.modal-tip-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.modal-tip-row:last-child { border-bottom: none; }
+.modal-tip-icon { width: 6px; height: 6px; border-radius: 50%; background: var(--navy); flex-shrink: 0; margin-top: 5px; }
+.modal-tip-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+.modal-close {
+  width: 100%; padding: 13px; border-radius: var(--radius-sm);
+  background: var(--navy); color: white; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 16px;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div>
+      <h1 id="header-title">KRSF Organic</h1>
+      <p id="header-sub">Priya Shah · Aravalli district</p>
+    </div>
+    <div class="header-avatar" onclick="toggleRole()">PS</div>
+  </div>
+
+  <!-- ══ SCREEN: HOME ══ -->
+  <div id="home" class="screen active">
+    <div style="padding:16px">
+
+      <div class="home-stats">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-total">12</div>
+          <div class="stat-lbl">My farmers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-active" style="color:var(--green-mid)">8</div>
+          <div class="stat-lbl">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-stale" style="color:var(--amber)">2</div>
+          <div class="stat-lbl">Need update</div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-chip active" onclick="filterFarmers('all',this)">All</div>
+        <div class="filter-chip" onclick="filterFarmers('active',this)">In Progress</div>
+        <div class="filter-chip" onclick="filterFarmers('done',this)">Completed</div>
+        <div class="filter-chip" onclick="filterFarmers('stale',this)">Needs Attention</div>
+      </div>
+
+      <div class="section-title">Farmers</div>
+      <div class="farmer-list" id="farmer-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: DETAIL ══ -->
+  <div id="detail" class="screen">
+    <div class="detail-hero">
+      <div class="detail-back" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </div>
+      <div class="detail-name" id="d-name">Rameshbhai Patel</div>
+      <div class="detail-meta" id="d-meta">GJ-HMT-001 · 3 bigha · Bajri</div>
+      <div class="detail-tags" id="d-tags"></div>
+      <div class="detail-progress">
+        <div>
+          <div class="detail-prog-text">Season 1 progress</div>
+          <div style="margin-top:6px">
+            <div style="background:rgba(255,255,255,0.2);border-radius:4px;height:5px;width:180px">
+              <div id="d-prog-bar" style="height:5px;border-radius:4px;background:var(--gold);transition:width 0.4s"></div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-prog-num" id="d-prog-num">0/8</div>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <div class="section-title" style="margin-bottom:12px">8-Step Progress</div>
+      <div class="steps-list" id="steps-list"></div>
+
+      <div class="survey-section">
+        <div class="section-title" style="margin-bottom:12px">Farmer Profile</div>
+        <div class="survey-grid" id="survey-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: LOG UPDATE ══ -->
+  <div id="log" class="screen">
+    <div class="log-hero">
+      <div class="detail-back" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </div>
+      <h2 id="log-title">Log Step Update</h2>
+      <p id="log-sub">Select farmer and step below</p>
+    </div>
+
+    <div class="log-body">
+      <div class="form-group">
+        <label class="form-label">Farmer</label>
+        <div class="select-wrap">
+          <select class="form-select" id="log-farmer" onchange="updateLogFarmer()">
+            <option value="">Select farmer...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Step</label>
+        <div class="select-wrap">
+          <select class="form-select" id="log-step" onchange="updateStepTip()">
+            <option value="">Select step...</option>
+            <option value="S1">S1 · Land Demarcation</option>
+            <option value="S2">S2 · Start Compost</option>
+            <option value="S3">S3 · Vermicompost Setup</option>
+            <option value="S4">S4 · Jeevamrut Preparation</option>
+            <option value="S5">S5 · Soil Preparation</option>
+            <option value="S6">S6 · Seed Treatment &amp; Sowing</option>
+            <option value="S7">S7 · Organic Pest Management</option>
+            <option value="S8">S8 · Harvest &amp; Income Recording</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="step-tip-box" style="display:none">
+        <div class="step-tip">
+          <div class="step-tip-title" id="tip-title">Key reminder</div>
+          <div class="step-tip-text" id="tip-text"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <div class="status-grid">
+          <div class="status-btn" onclick="selectStatus('Done',this)">
+            <div class="s-icon">✓</div>
+            <div class="s-label">Done</div>
+          </div>
+          <div class="status-btn" onclick="selectStatus('In Progress',this)">
+            <div class="s-icon">◑</div>
+            <div class="s-label">In Progress</div>
+          </div>
+          <div class="status-btn" onclick="selectStatus('Not Started',this)">
+            <div class="s-icon">○</div>
+            <div class="s-label">Not Started</div>
+          </div>
+          <div class="status-btn" onclick="selectStatus('Dropped',this)">
+            <div class="s-icon">✕</div>
+            <div class="s-label">Dropped</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Photo Evidence</label>
+        <div class="photo-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()">
+          <div class="photo-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="2" y="6" width="18" height="13" rx="3" stroke="#0D2B6B" stroke-width="1.5"/>
+              <circle cx="11" cy="12.5" r="3.5" stroke="#0D2B6B" stroke-width="1.5"/>
+              <path d="M7 6l1.5-2.5h5L15 6" stroke="#0D2B6B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p id="photo-label">Tap to take or upload photo</p>
+          <div class="photo-filename" id="photo-filename"></div>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(this)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes (optional)</label>
+        <textarea class="form-textarea" id="log-notes" placeholder="Any observations, issues, or next steps..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-select" id="log-date">
+      </div>
+
+      <button class="submit-btn" onclick="submitLog()" id="submit-btn">Submit Update</button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: DASHBOARD ══ -->
+  <div id="dashboard" class="screen">
+    <div class="dash-kpi-row">
+      <div class="kpi-card navy">
+        <div class="kpi-num" id="kpi-total">25</div>
+        <div class="kpi-lbl">Total farmers</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-num" id="kpi-done">3</div>
+        <div class="kpi-lbl">Season 1 complete</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-num" id="kpi-prog">19</div>
+        <div class="kpi-lbl">In progress</div>
+      </div>
+      <div class="kpi-card gold">
+        <div class="kpi-num" id="kpi-drop">1</div>
+        <div class="kpi-lbl">Dropped</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:12px">Step completion</div>
+    <div class="step-progress-card">
+      <div id="step-progress-rows"></div>
+    </div>
+
+    <div class="section-title" style="margin:16px 0 10px">Recent updates</div>
+    <div class="recent-log" id="recent-log"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showScreen('home',this)">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Farmers
+    </button>
+    <button class="nav-btn" onclick="showScreen('log',this)">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Log Step
+    </button>
+    <button class="nav-btn" onclick="showScreen('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="13" width="7" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="18" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="3" width="7" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+      Dashboard
+    </button>
+  </nav>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- STEP DETAIL MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modal-step-badge" style="margin-bottom:8px"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-section-hdr">What to do</div>
+    <div id="modal-todo"></div>
+    <div class="modal-section-hdr">Evidence required</div>
+    <div id="modal-evidence"></div>
+    <div class="modal-section-hdr">Key tips</div>
+    <div id="modal-tips"></div>
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">
+      Log update for this step →
+    </button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const STEPS_META = {
+  S1: { name:"Land Demarcation", tip:"Buffer min 2 ft wide. Vetiver preferred. No buffer = no certification.", todo:"Measure plot · Place 4 corner markers · Create 2-ft buffer · Inform neighbour · Record GPS", evidence:"4-corner photo · Buffer perimeter photo · Neighbour signature · GPS in log", tips:["Buffer must be min 2 ft wide, 4 ft ideal on shared edges","Vetiver grass preferred — also prevents soil run-off","No buffer = not eligible for organic certification","Complete before any soil work begins"] },
+  S2: { name:"Start Compost", tip:"Start 60 days before sowing. Ratio: 3 parts dry : 1 green : 1 FYM.", todo:"Build 6×4×2 ft pit · Layer dry/green/FYM · Moisten to 60% · Cover · Turn every 15 days", evidence:"Pit setup photo · Layering photo · Finished compost photo (dark, crumbly)", tips:["Start 60 days before planned sowing date","Ratio: 3 parts dry biomass : 1 part green : 1 part FYM","Never add cooked food, oil, or diseased plant material","Compost ready when dark, crumbly, earthy smell — 45–60 days"] },
+  S3: { name:"Vermicompost Setup", tip:"Eisenia fetida worms only — not earthworms. 1 kg per sq ft of bed.", todo:"Build 6×3×1.5 ft bed in shade · Add composted base · Introduce Eisenia fetida · Feed every 5-7 days", evidence:"Bed with dimensions photo · Worm introduction weight slip · FC Day 15 visit photo", tips:["Source Eisenia fetida from KVK — never use earthworms","Never add citrus, onion, or salty food waste — toxic to worms","Maintain 60–70% moisture, cover with jute sack","Target 200–250 kg vermicompost per bed per 45-day cycle"] },
+  S4: { name:"Jeevamrut Preparation", tip:"Desi cow only. Non-chlorinated water only. Use within 3 days.", todo:"200L drum: 10kg dung + 10L urine + 1kg jaggery + 1kg besan + native soil + 200L well water · Stir twice daily · Ferment 48hr", evidence:"Ingredients measured photo · Drum with date label · FC Day 2 quality check (foam = ready)", tips:["Desi cow only — exotic breeds have weaker microbial activity","Do NOT use city/piped water — chlorine kills beneficial microbes","Foam on surface after 48hr = ready to use","Use within 3 days · Apply to moist soil, never in harsh sun"] },
+  S5: { name:"Soil Preparation", tip:"Collect soil sample first. Target pH 6.0–7.5, OC >0.8%.", todo:"Collect soil sample (5 points, 0–6 inch) · Send to NABL lab · Deep tillage 12–15 inch · Apply 2–3t/bigha compost · Apply Ghan Jeevamrut 100kg/bigha", evidence:"Soil sample + lab slip · Lab report (pH,N,P,K,OC%) · Tillage photo · Compost application photo", tips:["Low OC (<0.5%): double compost dose, add neem cake 50kg/bigha","High pH (>8): apply sulphur 5kg/bigha","Never till wet soil — destroys soil structure","Green manure incorporation adds ~40kg N/bigha equivalent"] },
+  S6: { name:"Seed Treatment & Sowing", tip:"No hybrid/BT/GM seeds. If germination <75% at Day 10, resow within 3 days.", todo:"Make Beejamrut: 250g dung + 250ml urine + 50g lime + 1L water · Coat seeds · Dry 30min in shade · Sow desi variety at correct spacing", evidence:"Beejamrut prep photo · Coated seeds drying · Seed source record · Sowing photo · Germination % Day 10", tips:["No hybrid, BT, or GM seeds permitted","Beejamrut dramatically reduces damping-off and seed rot","If germination <75% at Day 10: resow in gaps within 3 days","Ghan Jeevamrut 100kg/bigha in seed furrow before placement"] },
+  S7: { name:"Organic Pest Management", tip:"NEVER use Carbofuran, Chlorpyrifos — auto Dropped status. Intervene only when damage >10%.", todo:"Weekly scouting (W-pattern, 20 plants/bigha) · Neem oil for sucking pests · Panchagavya 3% for fungal · Bt for borers · Manual weeding Day 20–25 and Day 45–50", evidence:"Weekly scouting log · Pest ID photo · Bio-remedy application photo · FC Day 45 visit photo", tips:["Intervene only when pest damage >10% — below this, beneficial insects self-regulate","NEVER use: Carbofuran, Chlorpyrifos, Endosulfan — auto Dropped","Record every spray: date, product, dose, reason in FC log","Panchagavya: 3kg dung + 3L urine + 2L milk + 2L curd + 1L ghee, ferment 30 days"] },
+  S8: { name:"Harvest & Income Recording", tip:"Use certified scale only — no estimation. Record both farm-gate and mandi price.", todo:"Pre-harvest FC visit (maturity check ≥85%) · Harvest · Weigh with certified scale · Record kg/bigha and Rs/kg · Post-harvest soil sample · Farmer feedback interview", evidence:"Pre-harvest FC photo · Weighing slip photo · Sale receipt · Post-harvest soil slip · Farmer feedback form", tips:["Use certified/known-weight scale — not estimation","Record BOTH farm-gate price and mandi price if different","Post-harvest OC% should show +0.1% improvement vs pre-season","Completed farmers eligible for organic certification support in Season 2"] }
+};
+
+const FARMERS = [
+  {id:"GJ-HMT-001",name:"Rameshbhai Patel",   fc:"Priya Shah",   village:"Uchhal",        district:"Aravalli",      crop:"Bajri",     land:"3",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"In Progress",S8:"Not Started"}, income:"1-2L",irrigation:"Borewell",livestock:"2 Cow, 1 Goat",chemical:"Y"},
+  {id:"GJ-HMT-002",name:"Laxmiben Solanki",   fc:"Priya Shah",   village:"Khedbrahma",    district:"Aravalli",      crop:"Tuver",     land:"2",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"Done"}, income:"1-2L",irrigation:"Rain-fed",livestock:"5 Goat",chemical:"Y"},
+  {id:"GJ-SRT-001",name:"Kantibhai Vasava",    fc:"Raju Bhatt",   village:"Mandvi",        district:"Surat",         crop:"Maize",     land:"1.5",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"In Progress",S6:"Not Started",S7:"Not Started",S8:"Not Started"}, income:"2-5L",irrigation:"Canal",livestock:"1 Cow, 1 Buffalo",chemical:"Y"},
+  {id:"GJ-NMD-001",name:"Gitaben Tadvi",       fc:"Meena Parmar", village:"Rajpipla",      district:"Narmada",       crop:"Arhar",     land:"4",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"In Progress",S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started"}, income:"1-2L",irrigation:"Borewell",livestock:"3 Goat",chemical:"Y"},
+  {id:"GJ-NMD-002",name:"Dilipbhai Aahir",     fc:"Meena Parmar", village:"Garudeshwar",   district:"Narmada",       crop:"Bhindi",    land:"2.5",steps:{S1:"Done",S2:"Done",S3:"In Progress",S4:"Not Started",S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started"}, income:"1-2L",irrigation:"Well",livestock:"2 Cow, 1 Buffalo",chemical:"Y"},
+  {id:"GJ-DHD-001",name:"Savitaben Rathwa",    fc:"Suresh Nayak", village:"Devgadh Baria", district:"Dahod",         crop:"Moong",     land:"1",  steps:{S1:"Done",S2:"In Progress",S3:"Not Started",S4:"Not Started",S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started"}, income:"<1L",irrigation:"Rain-fed",livestock:"None",chemical:"Y"},
+  {id:"GJ-CUD-001",name:"Bhikhabhai Baria",    fc:"Anjali Roli",  village:"Bodeli",        district:"Chhotaudaipur", crop:"Groundnut", land:"3.5",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"Done"}, income:"2-5L",irrigation:"Borewell",livestock:"3 Cow, 2 Buffalo",chemical:"Y"},
+  {id:"GJ-CUD-002",name:"Manishaben Gamit",    fc:"Anjali Roli",  village:"Chhota Udaipur",district:"Chhotaudaipur", crop:"Jowar",     land:"2",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"In Progress",S7:"Not Started",S8:"Not Started"}, income:"1-2L",irrigation:"Well",livestock:"4 Goat",chemical:"Y"},
+  {id:"GJ-BNS-001",name:"Naranbhai Chaudhary", fc:"Kiran Patel",  village:"Tharad",        district:"Banaskantha",   crop:"Bajri",     land:"5",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"In Progress",S8:"Not Started"}, income:"1-2L",irrigation:"Borewell",livestock:"3 Cow",chemical:"Y"},
+  {id:"GJ-BNS-002",name:"Shantaben Rabari",    fc:"Kiran Patel",  village:"Dhanera",       district:"Banaskantha",   crop:"Wheat",     land:"3",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"In Progress",S6:"Not Started",S7:"Not Started",S8:"Not Started"}, income:"<1L",irrigation:"Canal",livestock:"6 Goat",chemical:"Y"},
+  {id:"GJ-VDR-001",name:"Pravinbhai Makvana",  fc:"Dinesh Shah",  village:"Kavant",        district:"Vadodara",      crop:"Cotton",    land:"4",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"In Progress"}, income:"2-5L",irrigation:"Borewell",livestock:"2 Cow",chemical:"Y"},
+  {id:"GJ-JNR-001",name:"Bhaveshbhai Kachhi",  fc:"Leena Vyas",   village:"Visavadar",     district:"Junagadh",      crop:"Groundnut", land:"4",  steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"Done"}, income:"2-5L",irrigation:"Borewell",livestock:"3 Cow",chemical:"Y"},
+];
+
+let currentFarmer = null;
+let selectedStatus = null;
+let currentRole = 'fc'; // 'fc' or 'pm'
+let prevScreen = 'home';
+
+// ══════════════════════════════════════════════
+// RENDER FARMER LIST
+// ══════════════════════════════════════════════
+function countDone(steps) { return Object.values(steps).filter(s=>s==='Done').length; }
+
+function getStatusClass(steps) {
+  const done = countDone(steps);
+  if (done === 8) return 'done';
+  const vals = Object.values(steps);
+  if (vals.includes('Dropped')) return 'drop';
+  if (vals.includes('In Progress') || done > 0) return 'active';
+  return 'todo';
+}
+
+function getCurrentStep(steps) {
+  const order = ['S1','S2','S3','S4','S5','S6','S7','S8'];
+  for (let s of order) { if (steps[s] === 'In Progress') return s; }
+  for (let s of order) { if (steps[s] === 'Not Started') return s; }
+  return 'S8';
+}
+
+function renderFarmerList(filter='all') {
+  const list = document.getElementById('farmer-list');
+  let farmers = FARMERS;
+
+  if (currentRole === 'fc') {
+    farmers = farmers.filter(f => f.fc === 'Priya Shah');
+  }
+
+  if (filter === 'active') farmers = farmers.filter(f => { const d=countDone(f.steps); return d>0 && d<8 && !Object.values(f.steps).includes('Dropped'); });
+  else if (filter === 'done') farmers = farmers.filter(f => countDone(f.steps)===8);
+  else if (filter === 'stale') farmers = farmers.filter(f => Object.values(f.steps).includes('Dropped') || (countDone(f.steps)===0));
+
+  document.getElementById('stat-total').textContent = farmers.length;
+  document.getElementById('stat-active').textContent = farmers.filter(f=>{const d=countDone(f.steps);return d>0&&d<8;}).length;
+  document.getElementById('stat-stale').textContent = farmers.filter(f=>countDone(f.steps)===0||Object.values(f.steps).includes('Dropped')).length;
+
+  list.innerHTML = farmers.map(f => {
+    const done = countDone(f.steps);
+    const pct = Math.round(done/8*100);
+    const curStep = getCurrentStep(f.steps);
+    const sc = getStatusClass(f.steps);
+    const badgeClass = sc==='done'?'badge-done':sc==='active'?'badge-prog':sc==='drop'?'badge-drop':'badge-todo';
+    const badgeLabel = sc==='done'?'Completed':sc==='active'?`${STEPS_META[curStep].name}`:sc==='drop'?'Dropped':'Not started';
+    return `<div class="farmer-card" onclick="openFarmer('${f.id}')">
+      <div class="farmer-card-top">
+        <div>
+          <div class="farmer-name">${f.name}</div>
+          <div class="farmer-meta">${f.village} · ${f.district}</div>
+          <div class="farmer-id-tag">${f.id}</div>
+        </div>
+        <span class="badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="farmer-foot">
+        <div class="step-count"><span>${done}</span>/8 steps done</div>
+        <div class="current-step-label">${f.crop} · ${f.land} bigha</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterFarmers(filter, el) {
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderFarmerList(filter);
+}
+
+// ══════════════════════════════════════════════
+// FARMER DETAIL
+// ══════════════════════════════════════════════
+function openFarmer(id) {
+  currentFarmer = FARMERS.find(f=>f.id===id);
+  if (!currentFarmer) return;
+  prevScreen = 'home';
+
+  document.getElementById('d-name').textContent = currentFarmer.name;
+  document.getElementById('d-meta').textContent = `${currentFarmer.id} · ${currentFarmer.land} bigha · ${currentFarmer.crop}`;
+
+  const done = countDone(currentFarmer.steps);
+  document.getElementById('d-prog-num').textContent = `${done}/8`;
+  document.getElementById('d-prog-bar').style.width = (done/8*100)+'%';
+
+  document.getElementById('d-tags').innerHTML =
+    `<span class="detail-tag">${currentFarmer.district}</span>
+     <span class="detail-tag">${currentFarmer.irrigation}</span>
+     <span class="detail-tag">${currentFarmer.fc}</span>`;
+
+  const stepOrder = ['S1','S2','S3','S4','S5','S6','S7','S8'];
+  document.getElementById('steps-list').innerHTML = stepOrder.map(s => {
+    const st = currentFarmer.steps[s];
+    const cls = st==='Done'?'done':st==='In Progress'?'in-progress':st==='Dropped'?'dropped':'';
+    const circCls = st==='Done'?'done':st==='In Progress'?'in-progress':st==='Dropped'?'dropped':'not-started';
+    const icon = st==='Done'?'✓':st==='In Progress'?'◑':st==='Dropped'?'✕':s.replace('S','');
+    const badgeCls = st==='Done'?'badge-done':st==='In Progress'?'badge-prog':st==='Dropped'?'badge-drop':'badge-todo';
+    return `<div class="step-item ${cls}" onclick="openStepModal('${s}')">
+      <div class="step-circle ${circCls}">${icon}</div>
+      <div class="step-info">
+        <div class="step-item-name">${s}: ${STEPS_META[s].name}</div>
+        <div class="step-item-meta">${st}</div>
+      </div>
+      <div class="step-chevron">›</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('survey-grid').innerHTML = `
+    <div class="survey-item"><div class="survey-lbl">Annual income</div><div class="survey-val">${currentFarmer.income}</div></div>
+    <div class="survey-item"><div class="survey-lbl">Total land</div><div class="survey-val">${currentFarmer.land} bigha</div></div>
+    <div class="survey-item"><div class="survey-lbl">Irrigation</div><div class="survey-val">${currentFarmer.irrigation}</div></div>
+    <div class="survey-item"><div class="survey-lbl">Livestock</div><div class="survey-val">${currentFarmer.livestock}</div></div>
+    <div class="survey-item"><div class="survey-lbl">Chemicals used</div><div class="survey-val">${currentFarmer.chemical==='Y'?'Yes':'No'}</div></div>
+    <div class="survey-item"><div class="survey-lbl">Crop</div><div class="survey-val">${currentFarmer.crop}</div></div>
+  `;
+
+  showScreen('detail');
+}
+
+// ══════════════════════════════════════════════
+// STEP MODAL
+// ══════════════════════════════════════════════
+function openStepModal(stepCode) {
+  const m = STEPS_META[stepCode];
+  document.getElementById('modal-step-badge').innerHTML = `<span class="badge badge-navy">${stepCode}</span>`;
+  document.getElementById('modal-title').textContent = m.name;
+  document.getElementById('modal-sub').textContent = m.todo.split('·')[0].trim() + ' and more...';
+  document.getElementById('modal-todo').innerHTML = m.todo.split('·').map(t=>`<div class="modal-tip-row"><div class="modal-tip-icon"></div><div class="modal-tip-text">${t.trim()}</div></div>`).join('');
+  document.getElementById('modal-evidence').innerHTML = m.evidence.split('·').map(t=>`<div class="modal-tip-row"><div class="modal-tip-icon"></div><div class="modal-tip-text">${t.trim()}</div></div>`).join('');
+  document.getElementById('modal-tips').innerHTML = m.tips.map(t=>`<div class="modal-tip-row"><div class="modal-tip-icon"></div><div class="modal-tip-text">${t}</div></div>`).join('');
+  document.querySelector('.modal-close').onclick = () => {
+    document.getElementById('modal').classList.remove('open');
+    openLogFor(currentFarmer?.id, stepCode);
+  };
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════
+// LOG FORM
+// ══════════════════════════════════════════════
+function openLogFor(farmerId, stepCode) {
+  prevScreen = 'detail';
+  showScreen('log');
+  if (farmerId) { document.getElementById('log-farmer').value = farmerId; updateLogFarmer(); }
+  if (stepCode) { document.getElementById('log-step').value = stepCode; updateStepTip(); }
+}
+
+function populateLogFarmerDropdown() {
+  const sel = document.getElementById('log-farmer');
+  sel.innerHTML = '<option value="">Select farmer...</option>';
+  FARMERS.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.id; opt.textContent = `${f.name} (${f.id})`;
+    sel.appendChild(opt);
+  });
+}
+
+function updateLogFarmer() {
+  const id = document.getElementById('log-farmer').value;
+  const f = FARMERS.find(x=>x.id===id);
+  if (f) {
+    document.getElementById('log-title').textContent = 'Log Step Update';
+    document.getElementById('log-sub').textContent = `${f.name} · ${f.village}`;
+  }
+}
+
+function updateStepTip() {
+  const code = document.getElementById('log-step').value;
+  const box = document.getElementById('step-tip-box');
+  if (code && STEPS_META[code]) {
+    document.getElementById('tip-title').textContent = STEPS_META[code].name;
+    document.getElementById('tip-text').textContent = STEPS_META[code].tip;
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+  updatePhotoFilename();
+}
+
+function selectStatus(status, el) {
+  selectedStatus = status;
+  document.querySelectorAll('.status-btn').forEach(b=>b.className='status-btn');
+  const map = {'Done':'sel-done','In Progress':'sel-prog','Not Started':'sel-not','Dropped':'sel-drop'};
+  el.classList.add(map[status]);
+}
+
+let photoName = '';
+function handlePhoto(input) {
+  if (input.files && input.files[0]) {
+    const zone = document.getElementById('photo-zone');
+    zone.classList.add('has-photo');
+    document.getElementById('photo-label').textContent = 'Photo attached';
+    updatePhotoFilename();
+  }
+}
+function updatePhotoFilename() {
+  const farmerId = document.getElementById('log-farmer').value;
+  const step = document.getElementById('log-step').value;
+  if (farmerId && step) {
+    const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    photoName = `${farmerId}_${step}_${today}.jpg`;
+    document.getElementById('photo-filename').textContent = photoName;
+  }
+}
+
+function submitLog() {
+  const farmerId = document.getElementById('log-farmer').value;
+  const step = document.getElementById('log-step').value;
+  if (!farmerId || !step || !selectedStatus) {
+    showToast('Please fill farmer, step, and status', 'error'); return;
+  }
+  // Update local data
+  const farmer = FARMERS.find(f=>f.id===farmerId);
+  if (farmer) farmer.steps[step] = selectedStatus;
+
+  // Reset form
+  document.getElementById('log-farmer').value = '';
+  document.getElementById('log-step').value = '';
+  document.getElementById('log-notes').value = '';
+  document.getElementById('photo-zone').classList.remove('has-photo');
+  document.getElementById('photo-label').textContent = 'Tap to take or upload photo';
+  document.getElementById('photo-filename').textContent = '';
+  document.getElementById('step-tip-box').style.display = 'none';
+  document.querySelectorAll('.status-btn').forEach(b=>b.className='status-btn');
+  selectedStatus = null;
+
+  showToast(`${step} updated to "${selectedStatus}" for ${farmer?.name}`);
+  renderFarmerList();
+  renderDashboard();
+
+  setTimeout(() => {
+    if (prevScreen === 'detail' && currentFarmer) openFarmer(currentFarmer.id);
+    else showScreen('home', document.querySelector('.nav-btn'));
+  }, 1200);
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+function renderDashboard() {
+  const total = FARMERS.length;
+  const completed = FARMERS.filter(f=>countDone(f.steps)===8).length;
+  const inprog = FARMERS.filter(f=>{const d=countDone(f.steps);return d>0&&d<8;}).length;
+  const dropped = FARMERS.filter(f=>Object.values(f.steps).includes('Dropped')).length;
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-done').textContent = completed;
+  document.getElementById('kpi-prog').textContent = inprog;
+  document.getElementById('kpi-drop').textContent = dropped;
+
+  const stepOrder = ['S1','S2','S3','S4','S5','S6','S7','S8'];
+  const colors = ['#1565C0','#2E7D32','#558B2F','#1B5E20','#6A1B9A','#E65100','#880E4F','#C8A84B'];
+  document.getElementById('step-progress-rows').innerHTML = stepOrder.map((s,i) => {
+    const doneCount = FARMERS.filter(f=>f.steps[s]==='Done').length;
+    const pct = Math.round(doneCount/total*100);
+    return `<div class="step-prog-row">
+      <div class="step-prog-label">${s}: ${STEPS_META[s].name}</div>
+      <div class="step-prog-pct">${pct}%</div>
+    </div>
+    <div class="step-prog-bar" style="margin-bottom:10px">
+      <div class="step-prog-fill" style="width:${pct}%;background:${colors[i]}"></div>
+    </div>`;
+  }).join('');
+
+  const logs = [
+    {dot:'done', text:'<b>Laxmiben Solanki</b> — <span>S8 Harvest marked Done</span>', time:'Today 9:41'},
+    {dot:'done', text:'<b>Bhikhabhai Baria</b> — <span>S8 Harvest marked Done</span>', time:'Today 8:15'},
+    {dot:'prog', text:'<b>Rameshbhai Patel</b> — <span>S7 Pest Mgmt In Progress</span>', time:'Yesterday'},
+    {dot:'prog', text:'<b>Kantibhai Vasava</b> — <span>S5 Soil Prep In Progress</span>', time:'2 days ago'},
+    {dot:'done', text:'<b>Bhaveshbhai Kachhi</b> — <span>S8 Harvest marked Done</span>', time:'3 days ago'},
+  ];
+  document.getElementById('recent-log').innerHTML = logs.map(l=>`
+    <div class="log-item">
+      <div class="log-dot ${l.dot}"></div>
+      <div class="log-text">${l.text}</div>
+      <div class="log-time">${l.time}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function showScreen(name, navEl) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (navEl) {
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    navEl.classList.add('active');
+  }
+  const titles = { home:'KRSF Organic', detail: currentFarmer?.name || 'Farmer', log:'Log Step Update', dashboard:'PM Dashboard' };
+  document.getElementById('header-title').textContent = titles[name] || 'KRSF Organic';
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'home') renderFarmerList();
+  window.scrollTo(0,0);
+}
+
+function goBack() { showScreen(prevScreen === 'detail' ? 'detail' : 'home'); if(prevScreen==='detail' && currentFarmer) openFarmer(currentFarmer.id); else showScreen('home'); }
+
+function toggleRole() {
+  currentRole = currentRole === 'fc' ? 'pm' : 'fc';
+  const sub = currentRole === 'fc' ? 'Priya Shah · Aravalli district' : 'PM View · All farmers';
+  document.getElementById('header-sub').textContent = sub;
+  document.querySelector('.header-avatar').textContent = currentRole === 'fc' ? 'PS' : 'PM';
+  renderFarmerList();
+  showToast(currentRole==='fc' ? 'Switched to FC view (Priya Shah)' : 'Switched to PM view');
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('log-date').value = today;
+  populateLogFarmerDropdown();
+  renderFarmerList();
+});
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then(r => console.log("SW registered:", r.scope))
+      .catch(e => console.log("SW error:", e));
+  });
+}
+</script>
+</body>
+</html>
