@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0D2B6B"/>
+  <!-- Leaf/plant icon -->
+  <circle cx="256" cy="200" r="90" fill="none" stroke="#C8A84B" stroke-width="20"/>
+  <path d="M256 290 Q200 340 180 400" stroke="#C8A84B" stroke-width="20" stroke-linecap="round" fill="none"/>
+  <path d="M200 220 Q156 180 140 130 Q200 120 240 170" fill="#1B5E20" opacity="0.9"/>
+  <path d="M310 215 Q355 170 375 125 Q315 118 278 168" fill="#2E7D32" opacity="0.9"/>
+  <text x="256" y="460" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="72" fill="#C8A84B">KRSF</text>
+</svg>
