@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KRSF Organic — Field App</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D2B6B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KRSF Organic">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:     #0D2B6B;
+  --navy2:    #1B4F9A;
+  --navy-lt:  #E6F1FB;
+  --gold:     #C8A84B;
+  --gold-lt:  #FFF8E1;
+  --green:    #1B5E20;
+  --green2:   #2E7D32;
+  --green-lt: #E8F5E9;
+  --amber:    #E65100;
+  --amber-lt: #FBE9E7;
+  --red:      #B71C1C;
+  --red-lt:   #FFEBEE;
+  --bg:       #F0F4FA;
+  --card:     #FFFFFF;
+  --border:   #DDE4F0;
+  --text:     #0F1F3D;
+  --text2:    #4A5E7A;
+  --text3:    #8EA0B8;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Sora', sans-serif;
+  --r:        14px;
+  --r-sm:     8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;font-size:14px}
+input,select,textarea,button{font-family:var(--sans)}
+
+/* ── SHELL ── */
+#app{display:flex;flex-direction:column;min-height:100vh}
+.screen{flex:1;overflow-y:auto;padding-bottom:84px;display:none;animation:fadeIn .18s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);padding:14px 18px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-left h1{color:#fff;font-size:15px;font-weight:700;letter-spacing:-.3px}
+.hdr-left p{color:rgba(255,255,255,.55);font-size:11px;margin-top:1px}
+.hdr-av{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hdr-back{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;padding:4px 0;background:none;border:none}
+.hdr-back svg{width:16px;height:16px}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -4px 20px rgba(13,43,107,.07)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 13px;cursor:pointer;border:none;background:none;color:var(--text3);font-size:10px;font-weight:500;gap:4px;transition:color .15s}
+.nav-btn.active{color:var(--navy)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.bd{background:var(--green-lt);color:var(--green)}
+.bp{background:var(--gold-lt);color:#7D5A00}
+.bn{background:#F5F7FA;color:var(--text3)}
+.br{background:var(--red-lt);color:var(--red)}
+.pbar{background:var(--border);border-radius:4px;height:4px}
+.pfill{height:4px;border-radius:4px;background:var(--green2);transition:width .4s}
+.sec-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.btn{padding:13px;border-radius:var(--r-sm);border:none;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy2)}
+.btn-ghost{background:var(--bg);color:var(--text2);border:1.5px solid var(--border)}
+
+/* ── HOME ── */
+#home{padding:16px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 10px;text-align:center}
+.stat-n{font-size:24px;font-weight:700;color:var(--navy);font-family:var(--mono)}
+.stat-l{font-size:10px;color:var(--text2);margin-top:2px;font-weight:500}
+.filter-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* ── DISTRICT FILTER ── */
+.filter-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.filter-section .sec-title{margin-bottom:10px}
+.district-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.taluka-grid{display:flex;flex-wrap:wrap;gap:6px}
+.loc-chip{padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s}
+.loc-chip.on{background:var(--navy-lt);color:var(--navy2);border-color:var(--navy2)}
+.loc-chip.district.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filter-divider{height:1px;background:var(--border);margin:10px 0}
+
+/* ── FARMER CARDS ── */
+.farmer-list{display:flex;flex-direction:column;gap:9px}
+.f-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px 15px;cursor:pointer;transition:all .15s}
+.f-card:active{transform:scale(.985)}
+.f-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.f-name{font-size:14px;font-weight:600;color:var(--text)}
+.f-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.f-id{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:1px}
+.f-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.f-foot-l{font-size:11px;color:var(--text2)}
+.f-foot-l b{color:var(--navy);font-weight:700}
+.f-foot-r{font-size:11px;color:var(--text3);font-style:italic}
+
+/* ── ADD FARMER SCREEN ── */
+#add-farmer{padding:0}
+.add-hero{background:var(--navy);padding:18px 18px 22px}
+.add-hero h2{color:#fff;font-size:18px;font-weight:700;letter-spacing:-.3px}
+.add-hero p{color:rgba(255,255,255,.55);font-size:12px;margin-top:3px}
+.form-body{padding:16px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.form-label .req{color:var(--amber)}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--navy)}
+.form-textarea{resize:none;height:72px}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'';position:absolute;right:13px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-top-color:var(--text3);pointer-events:none}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-section-hdr{font-size:12px;font-weight:700;color:var(--navy);padding:10px 0 6px;border-bottom:2px solid var(--navy-lt);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.radio-group{display:flex;gap:8px;flex-wrap:wrap}
+.multi-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;transition:all .15s;user-select:none}
+.multi-chip.on{background:var(--navy-lt);color:var(--navy2);border-color:var(--navy2)}
+.radio-opt{padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s}
+.radio-opt.on{border-color:var(--navy);background:var(--navy-lt);color:var(--navy2)}
+.crop-table{width:100%;border-collapse:collapse;font-size:12px}
+.crop-table th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:11px}
+.crop-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
+.crop-table td input{width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 7px;font-size:12px;font-family:var(--sans);outline:none}
+.crop-table td input:focus{border-color:var(--navy)}
+
+/* ── DETAIL SCREEN ── */
+#detail{padding:0}
+.det-hero{background:var(--navy);padding:18px 18px 22px}
+.det-name{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.4px}
+.det-meta{color:rgba(255,255,255,.6);font-size:12px;margin-top:4px}
+.det-tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.det-tag{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.2)}
+.det-prog{background:rgba(255,255,255,.08);border-radius:10px;padding:12px 15px;margin-top:13px;display:flex;align-items:center;justify-content:space-between}
+.det-prog-txt{color:rgba(255,255,255,.65);font-size:11px;margin-bottom:7px}
+.det-prog-bar{background:rgba(255,255,255,.2);border-radius:4px;height:5px;width:160px}
+.det-prog-fill{height:5px;border-radius:4px;background:var(--gold);transition:width .4s}
+.det-prog-num{color:#fff;font-size:20px;font-weight:700;font-family:var(--mono)}
+.det-body{padding:16px}
+.steps-list{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.s-item{background:#fff;border-radius:var(--r-sm);border:1px solid var(--border);padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .15s}
+.s-item:active{transform:scale(.99)}
+.s-item.done{border-left:3px solid var(--green2)}
+.s-item.prog{border-left:3px solid var(--gold)}
+.s-item.drop{border-left:3px solid var(--red);opacity:.7}
+.s-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.s-dot.done{background:var(--green-lt);color:var(--green)}
+.s-dot.prog{background:var(--gold-lt);color:#7D5A00}
+.s-dot.ns{background:#F5F7FA;color:var(--text3)}
+.s-dot.drop{background:var(--red-lt);color:var(--red)}
+.s-info{flex:1}
+.s-name{font-size:13px;font-weight:600;color:var(--text)}
+.s-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.s-chev{color:var(--text3);font-size:15px}
+
+/* ── UPDATE BOX ── */
+.update-box{background:var(--card);border-radius:var(--r);border:2px solid var(--border);padding:16px;margin-bottom:16px}
+.update-box-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.update-box-sub{font-size:11px;color:var(--text2);margin-bottom:14px}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.s-btn{padding:11px 8px;border-radius:var(--r-sm);border:2px solid var(--border);background:#fff;cursor:pointer;text-align:center;transition:all .15s}
+.s-btn .icon{font-size:16px;margin-bottom:3px}
+.s-btn .lbl{font-size:11px;font-weight:700;color:var(--text2)}
+.s-btn.sel-done{border-color:var(--green2);background:var(--green-lt)}
+.s-btn.sel-done .lbl{color:var(--green)}
+.s-btn.sel-prog{border-color:var(--gold);background:var(--gold-lt)}
+.s-btn.sel-prog .lbl{color:#7D5A00}
+.s-btn.sel-ns{border-color:var(--text3);background:#F5F7FA}
+.s-btn.sel-ns .lbl{color:var(--text3)}
+.s-btn.sel-drop{border-color:var(--red);background:var(--red-lt)}
+.s-btn.sel-drop .lbl{color:var(--red)}
+.update-step-sel{margin-bottom:12px}
+.photo-zone{border:2px dashed var(--border);border-radius:var(--r-sm);padding:16px;text-align:center;cursor:pointer;background:#FAFBFD;margin-bottom:12px;transition:all .15s}
+.photo-zone:hover,.photo-zone:active{border-color:var(--navy);background:var(--navy-lt)}
+.photo-zone.has{border-style:solid;border-color:var(--green2);background:var(--green-lt)}
+.photo-zone p{font-size:12px;color:var(--text2);margin-top:5px}
+.photo-zone.has p{color:var(--green);font-weight:600}
+.photo-fn{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px}
+.notes-in{width:100%;padding:10px 12px;border-radius:var(--r-sm);border:1.5px solid var(--border);font-family:var(--sans);font-size:13px;color:var(--text);resize:none;height:66px;outline:none;margin-bottom:12px}
+.notes-in:focus{border-color:var(--navy)}
+#photo-in{display:none}
+
+/* ── SURVEY GRID ── */
+.survey-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.sv-item{background:#FAFBFD;border-radius:var(--r-sm);padding:10px 12px}
+.sv-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.sv-val{font-size:13px;font-weight:600;color:var(--text)}
+
+/* ── DASHBOARD ── */
+#dashboard{padding:16px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.kpi{border-radius:var(--r);padding:16px}
+.kpi-n{font-size:30px;font-weight:700;color:#fff;font-family:var(--mono);line-height:1}
+.kpi-l{font-size:11px;color:rgba(255,255,255,.65);margin-top:5px;font-weight:500}
+.kpi.k1{background:var(--navy)}
+.kpi.k2{background:var(--green)}
+.kpi.k3{background:var(--amber)}
+.kpi.k4{background:#7B5E0A}
+.prog-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.prog-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.prog-lbl{font-size:12px;font-weight:500;flex:1}
+.prog-pct{font-size:12px;font-weight:700;color:var(--navy);font-family:var(--mono);min-width:30px;text-align:right}
+.prog-bar2{background:var(--border);border-radius:4px;height:5px;margin-bottom:8px}
+.prog-fill2{height:5px;border-radius:4px;transition:width .6s}
+.log-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.log-row{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.log-row:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.log-dot.d{background:var(--green2)}.log-dot.p{background:var(--gold)}.log-dot.r{background:var(--red)}
+.log-txt{flex:1;font-size:12px;color:var(--text)}
+.log-txt span{color:var(--text2)}
+.log-time{font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(13,43,107,.45);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;margin:0 auto;padding:20px;max-height:82vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 15px}
+.sheet-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px}
+.sheet-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
+.sheet-close{width:100%;padding:13px;border-radius:var(--r-sm);background:var(--navy);color:#fff;border:none;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--green);color:#fff;padding:9px 18px;border-radius:30px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 18px rgba(27,94,32,.35)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:32px 24px}
+.login-logo{width:72px;height:72px;border-radius:20px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.login-logo svg{width:38px;height:38px}
+.login-title{color:#fff;font-size:22px;font-weight:700;letter-spacing:-.4px;margin-bottom:4px;text-align:center}
+.login-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:36px;text-align:center}
+.login-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
+.login-card{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;padding:16px 18px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:14px}
+.login-card:hover,.login-card:active{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);transform:scale(.99)}
+.login-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.login-info{flex:1}
+.login-name{color:#fff;font-size:14px;font-weight:600}
+.login-role{color:rgba(255,255,255,.5);font-size:11px;margin-top:2px}
+.login-arrow{color:rgba(255,255,255,.3);font-size:18px}
+.login-footer{color:rgba(255,255,255,.25);font-size:11px;margin-top:28px;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-logo">
+    <svg viewBox="0 0 38 38" fill="none">
+      <circle cx="19" cy="12" r="6" stroke="#C8A84B" stroke-width="2"/>
+      <path d="M6 32c0-7.18 5.82-13 13-13s13 5.82 13 13" stroke="#C8A84B" stroke-width="2" stroke-linecap="round"/>
+      <path d="M19 28v-6M16 25h6" stroke="#C8A84B" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="login-title">KRSF Organic</div>
+  <div class="login-sub">Chemical-Free Farming Program</div>
+
+  <div class="login-cards">
+
+    <div class="login-card" onclick="loginAs('pm')">
+      <div class="login-av" style="background:#C8A84B20;color:#C8A84B">PM</div>
+      <div class="login-info">
+        <div class="login-name">PM</div>
+        <div class="login-role">Program Manager · All districts</div>
+      </div>
+      <div class="login-arrow">›</div>
+    </div>
+
+    <div class="login-card" onclick="loginAs('fc1')">
+      <div class="login-av" style="background:#1D9E7520;color:#1D9E75">FC1</div>
+      <div class="login-info">
+        <div class="login-name">FC1</div>
+        <div class="login-role">Field Coordinator</div>
+      </div>
+      <div class="login-arrow">›</div>
+    </div>
+
+    <div class="login-card" onclick="loginAs('fc2')">
+      <div class="login-av" style="background:#378ADD20;color:#378ADD">FC2</div>
+      <div class="login-info">
+        <div class="login-name">FC2</div>
+        <div class="login-role">Field Coordinator</div>
+      </div>
+      <div class="login-arrow">›</div>
+    </div>
+
+  </div>
+  <div class="login-footer">KRSF · Dr. K. R. Shroff Foundation</div>
+</div>
+
+
+<!-- HEADER -->
+<div class="hdr" id="main-hdr">
+  <div class="hdr-left">
+    <h1 id="hdr-title">KRSF Organic</h1>
+    <p id="hdr-sub">Field Coordinator</p>
+  </div>
+  <div class="hdr-av" id="av-btn" onclick="toggleRole()">PS</div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div id="home" class="screen active">
+  <div style="padding:16px">
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Farmers</div></div>
+      <div class="stat"><div class="stat-n" id="s-active" style="color:var(--green2)">0</div><div class="stat-l">Active</div></div>
+      <div class="stat"><div class="stat-n" id="s-done" style="color:var(--gold)">0</div><div class="stat-l">Completed</div></div>
+    </div>
+
+    <!-- District + Taluka filter -->
+    <div class="filter-section">
+      <div class="sec-title">Filter by location</div>
+      <div class="district-grid" id="district-chips"></div>
+      <div id="taluka-wrap" style="display:none">
+        <div class="filter-divider"></div>
+        <div class="sec-title" style="margin-bottom:8px;margin-top:2px">Taluka / Block</div>
+        <div class="taluka-grid" id="taluka-chips"></div>
+      </div>
+    </div>
+
+    <!-- Step completion filter -->
+    <div class="filter-section" style="margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:8px">Filter by step completed</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="step-filter-chips">
+        <div class="loc-chip on" onclick="setStepFilter(null,this)">All farmers</div>
+        <div class="loc-chip" onclick="setStepFilter('S1',this)">S1 · Land Demarcation</div>
+        <div class="loc-chip" onclick="setStepFilter('S2',this)">S2 · Compost</div>
+        <div class="loc-chip" onclick="setStepFilter('S3',this)">S3 · Vermicompost</div>
+        <div class="loc-chip" onclick="setStepFilter('S4',this)">S4 · Jeevamrut</div>
+        <div class="loc-chip" onclick="setStepFilter('S5',this)">S5 · Soil Prep</div>
+        <div class="loc-chip" onclick="setStepFilter('S6',this)">S6 · Seed &amp; Sowing</div>
+        <div class="loc-chip" onclick="setStepFilter('S7',this)">S7 · Pest Mgmt</div>
+        <div class="loc-chip" onclick="setStepFilter('S8',this)">S8 · Harvest</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Farmers</div>
+    <div class="farmer-list" id="farmer-list"></div>
+  </div>
+</div>
+
+<!-- ══ ADD FARMER ══ -->
+<div id="add-farmer" class="screen">
+  <div class="add-hero">
+    <button class="hdr-back" onclick="showScreen('home')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Back
+    </button>
+    <h2>Add New Beneficiary</h2>
+    <p>Fill farmer consent form details</p>
+  </div>
+  <div class="form-body" id="add-form-body">
+
+    <div class="form-section-hdr">Personal Details</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Farmer Name <span class="req">*</span></label>
+        <input class="form-input" id="f-name" placeholder="Full name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mobile <span class="req">*</span></label>
+        <input class="form-input" id="f-mobile" placeholder="10-digit" type="tel" maxlength="10">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Age</label>
+        <input class="form-input" id="f-age" placeholder="Years" type="number" min="18" max="90">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gender</label>
+        <div class="radio-group" id="f-gender" style="margin-top:5px">
+          <div class="radio-opt" onclick="pickRadio('f-gender',this,'M')">Male</div>
+          <div class="radio-opt" onclick="pickRadio('f-gender',this,'F')">Female</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section-hdr">Location</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">District <span class="req">*</span></label>
+        <div class="sel-wrap">
+          <select class="form-select" id="f-district" onchange="populateTalukaDropdown()">
+            <option value="">Select...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Taluka <span class="req">*</span></label>
+        <div class="sel-wrap">
+          <select class="form-select" id="f-taluka">
+            <option value="">Select district first</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Village <span class="req">*</span></label>
+      <input class="form-input" id="f-village" placeholder="Village name" type="text">
+    </div>
+
+    <div class="form-section-hdr">Land & Income</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Total Land (Bigha) <span class="req">*</span></label>
+        <input class="form-input" id="f-land" placeholder="e.g. 3" type="number" step="0.5" min="0.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Annual Family Income</label>
+        <div class="sel-wrap">
+          <select class="form-select" id="f-income">
+            <option value="">Select...</option>
+            <option>Less than ₹1 lakh</option>
+            <option>₹1–2 lakh</option>
+            <option>₹2–5 lakh</option>
+            <option>More than ₹5 lakh</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Primary Income Source</label>
+      <div class="radio-group" id="f-income-src" style="margin-top:5px">
+        <div class="radio-opt" onclick="pickRadio('f-income-src',this,'Farming')">Farming</div>
+        <div class="radio-opt" onclick="pickRadio('f-income-src',this,'Labour')">Labour</div>
+        <div class="radio-opt" onclick="pickRadio('f-income-src',this,'Business')">Business</div>
+        <div class="radio-opt" onclick="pickRadio('f-income-src',this,'Livestock')">Livestock</div>
+        <div class="radio-opt" onclick="pickRadio('f-income-src',this,'Job')">Job</div>
+      </div>
+    </div>
+
+    <div class="form-section-hdr">Current Crops (up to 3)</div>
+    <div style="overflow-x:auto;margin-bottom:14px">
+      <table class="crop-table">
+        <thead><tr><th>#</th><th>Crop name</th><th>Area (Bigha)</th><th>Yield/season</th><th>Income (₹/yr)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><select id="c1n" style="width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 4px;font-size:11px;font-family:var(--sans)"><option value="">Select crop...</option><option>Ajwain</option>
+<option>Arhar (Tur)</option>
+<option>Bajri (Pearl Millet)</option>
+<option>Banana</option>
+<option>Barley</option>
+<option>Beetroot</option>
+<option>Bhindi (Okra)</option>
+<option>Bottle Gourd</option>
+<option>Brinjal</option>
+<option>Cabbage</option>
+<option>Capsicum</option>
+<option>Castor</option>
+<option>Cauliflower</option>
+<option>Chickpea (Chana)</option>
+<option>Coriander</option>
+<option>Cotton</option>
+<option>Cowpea (Chola)</option>
+<option>Cucumber</option>
+<option>Cumin (Jeera)</option>
+<option>Drumstick (Moringa)</option>
+<option>Fennel (Saunf)</option>
+<option>Fenugreek (Methi)</option>
+<option>Garlic</option>
+<option>Ginger</option>
+<option>Groundnut</option>
+<option>Horse Gram (Kulthi)</option>
+<option>Isabgol (Psyllium)</option>
+<option>Jowar (Sorghum)</option>
+<option>Jute</option>
+<option>Maize</option>
+<option>Mango</option>
+<option>Moong (Green Gram)</option>
+<option>Moth Bean</option>
+<option>Mustard</option>
+<option>Onion</option>
+<option>Papaya</option>
+<option>Peas</option>
+<option>Pomegranate</option>
+<option>Potato</option>
+<option>Radish</option>
+<option>Rice</option>
+<option>Ridge Gourd</option>
+<option>Sesame (Til)</option>
+<option>Soybean</option>
+<option>Spinach</option>
+<option>Sugarcane</option>
+<option>Sunflower</option>
+<option>Sweet Potato</option>
+<option>Tobacco</option>
+<option>Tomato</option>
+<option>Tuver (Pigeon Pea)</option>
+<option>Turmeric</option>
+<option>Urad (Black Gram)</option>
+<option>Watermelon</option>
+<option>Wheat</option>
+<option>Yam</option></select></td><td><input id="c1a" type="number" step="0.5" placeholder="0"></td><td><input id="c1y" placeholder="400 kg"></td><td><input id="c1i" type="number" placeholder="0"></td></tr>
+          <tr><td>2</td><td><select id="c2n" style="width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 4px;font-size:11px;font-family:var(--sans)"><option value="">Select crop...</option><option>Ajwain</option>
+<option>Arhar (Tur)</option>
+<option>Bajri (Pearl Millet)</option>
+<option>Banana</option>
+<option>Barley</option>
+<option>Beetroot</option>
+<option>Bhindi (Okra)</option>
+<option>Bottle Gourd</option>
+<option>Brinjal</option>
+<option>Cabbage</option>
+<option>Capsicum</option>
+<option>Castor</option>
+<option>Cauliflower</option>
+<option>Chickpea (Chana)</option>
+<option>Coriander</option>
+<option>Cotton</option>
+<option>Cowpea (Chola)</option>
+<option>Cucumber</option>
+<option>Cumin (Jeera)</option>
+<option>Drumstick (Moringa)</option>
+<option>Fennel (Saunf)</option>
+<option>Fenugreek (Methi)</option>
+<option>Garlic</option>
+<option>Ginger</option>
+<option>Groundnut</option>
+<option>Horse Gram (Kulthi)</option>
+<option>Isabgol (Psyllium)</option>
+<option>Jowar (Sorghum)</option>
+<option>Jute</option>
+<option>Maize</option>
+<option>Mango</option>
+<option>Moong (Green Gram)</option>
+<option>Moth Bean</option>
+<option>Mustard</option>
+<option>Onion</option>
+<option>Papaya</option>
+<option>Peas</option>
+<option>Pomegranate</option>
+<option>Potato</option>
+<option>Radish</option>
+<option>Rice</option>
+<option>Ridge Gourd</option>
+<option>Sesame (Til)</option>
+<option>Soybean</option>
+<option>Spinach</option>
+<option>Sugarcane</option>
+<option>Sunflower</option>
+<option>Sweet Potato</option>
+<option>Tobacco</option>
+<option>Tomato</option>
+<option>Tuver (Pigeon Pea)</option>
+<option>Turmeric</option>
+<option>Urad (Black Gram)</option>
+<option>Watermelon</option>
+<option>Wheat</option>
+<option>Yam</option></select></td><td><input id="c2a" type="number" step="0.5" placeholder="0"></td><td><input id="c2y" placeholder="350 kg"></td><td><input id="c2i" type="number" placeholder="0"></td></tr>
+          <tr><td>3</td><td><select id="c3n" style="width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 4px;font-size:11px;font-family:var(--sans)"><option value="">Optional</option><option>Ajwain</option>
+<option>Arhar (Tur)</option>
+<option>Bajri (Pearl Millet)</option>
+<option>Banana</option>
+<option>Barley</option>
+<option>Beetroot</option>
+<option>Bhindi (Okra)</option>
+<option>Bottle Gourd</option>
+<option>Brinjal</option>
+<option>Cabbage</option>
+<option>Capsicum</option>
+<option>Castor</option>
+<option>Cauliflower</option>
+<option>Chickpea (Chana)</option>
+<option>Coriander</option>
+<option>Cotton</option>
+<option>Cowpea (Chola)</option>
+<option>Cucumber</option>
+<option>Cumin (Jeera)</option>
+<option>Drumstick (Moringa)</option>
+<option>Fennel (Saunf)</option>
+<option>Fenugreek (Methi)</option>
+<option>Garlic</option>
+<option>Ginger</option>
+<option>Groundnut</option>
+<option>Horse Gram (Kulthi)</option>
+<option>Isabgol (Psyllium)</option>
+<option>Jowar (Sorghum)</option>
+<option>Jute</option>
+<option>Maize</option>
+<option>Mango</option>
+<option>Moong (Green Gram)</option>
+<option>Moth Bean</option>
+<option>Mustard</option>
+<option>Onion</option>
+<option>Papaya</option>
+<option>Peas</option>
+<option>Pomegranate</option>
+<option>Potato</option>
+<option>Radish</option>
+<option>Rice</option>
+<option>Ridge Gourd</option>
+<option>Sesame (Til)</option>
+<option>Soybean</option>
+<option>Spinach</option>
+<option>Sugarcane</option>
+<option>Sunflower</option>
+<option>Sweet Potato</option>
+<option>Tobacco</option>
+<option>Tomato</option>
+<option>Tuver (Pigeon Pea)</option>
+<option>Turmeric</option>
+<option>Urad (Black Gram)</option>
+<option>Watermelon</option>
+<option>Wheat</option>
+<option>Yam</option></select></td><td><input id="c3a" type="number" step="0.5" placeholder="0"></td><td><input id="c3y" placeholder=""></td><td><input id="c3i" type="number" placeholder="0"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="form-section-hdr">Water & Inputs</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Irrigation Source</label>
+        <div class="sel-wrap">
+          <select class="form-select" id="f-irr">
+            <option value="">Select...</option>
+            <option>Borewell</option><option>Well</option>
+            <option>Canal</option><option>River</option>
+            <option>Rain-fed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Water Availability</label>
+        <div class="sel-wrap">
+          <select class="form-select" id="f-water">
+            <option value="">Select...</option>
+            <option>Year-round</option>
+            <option>Seasonal</option>
+            <option>Scarce</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Uses Chemical Inputs?</label>
+      <div class="radio-group" id="f-chem" style="margin-top:5px">
+        <div class="radio-opt" onclick="pickRadio('f-chem',this,'Y')">Yes</div>
+        <div class="radio-opt" onclick="pickRadio('f-chem',this,'N')">No</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Chemical Input Cost per Season (₹)</label>
+      <input class="form-input" id="f-chem-cost" placeholder="e.g. 8500" type="number">
+    </div>
+
+    <div class="form-section-hdr">Livestock</div>
+    <div class="form-group">
+      <label class="form-label">Number of animals owned</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div style="background:var(--bg);border-radius:var(--r-sm);padding:10px 12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600">Cow</div>
+          <input class="form-input" id="f-cow" type="number" min="0" placeholder="0" style="padding:8px 10px">
+        </div>
+        <div style="background:var(--bg);border-radius:var(--r-sm);padding:10px 12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600">Buffalo</div>
+          <input class="form-input" id="f-buffalo" type="number" min="0" placeholder="0" style="padding:8px 10px">
+        </div>
+        <div style="background:var(--bg);border-radius:var(--r-sm);padding:10px 12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600">Goat / Sheep</div>
+          <input class="form-input" id="f-goat" type="number" min="0" placeholder="0" style="padding:8px 10px">
+        </div>
+        <div style="background:var(--bg);border-radius:var(--r-sm);padding:10px 12px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600">Other</div>
+          <input class="form-input" id="f-live-other" type="number" min="0" placeholder="0" style="padding:8px 10px">
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Uses FYM (Farm Yard Manure)?</label>
+      <div class="radio-group" id="f-fym" style="margin-top:5px">
+        <div class="radio-opt" onclick="pickRadio('f-fym',this,'Y')">Yes</div>
+        <div class="radio-opt" onclick="pickRadio('f-fym',this,'N')">No</div>
+      </div>
+    </div>
+
+    <div class="form-section-hdr">Conversion Intent</div>
+    <div class="form-group">
+      <label class="form-label">Ready for organic farming? <span class="req">*</span></label>
+      <div class="radio-group" id="f-ready" style="margin-top:5px">
+        <div class="radio-opt" onclick="pickRadio('f-ready',this,'Y')">Yes</div>
+        <div class="radio-opt" onclick="pickRadio('f-ready',this,'N')">No</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Bigha to convert <span class="req">*</span></label>
+        <input class="form-input" id="f-convert" placeholder="e.g. 2" type="number" step="0.5" min="0.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Season start date</label>
+        <input class="form-input" id="f-season-date" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Support needed <span style="color:var(--text3);font-weight:400;text-transform:none">(select all that apply)</span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px" id="f-support-multi">
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-support-multi')">Training</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-support-multi')">Inputs</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-support-multi')">Market Linkage</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-support-multi')">Technical Guidance</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-support-multi')">Financial Support</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Main concern <span style="color:var(--text3);font-weight:400;text-transform:none">(select all that apply)</span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px" id="f-concern-multi">
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-concern-multi')">Yield drop</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-concern-multi')">Price uncertainty</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-concern-multi')">Pest risk</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-concern-multi')">Labour cost increase</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-concern-multi')">Water scarcity</div>
+        <div class="multi-chip" onclick="toggleMultiChip(this,'f-concern-multi')">Input cost</div>
+      </div>
+    </div>
+
+    <div class="form-section-hdr">FC Admin</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">FC Name <span class="req">*</span></label>
+        <input class="form-input" id="f-fc" placeholder="Your name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Survey Date</label>
+        <input class="form-input" id="f-survey-date" type="date">
+      </div>
+    </div>
+
+    <div style="height:4px"></div>
+    <button class="btn btn-primary" onclick="submitNewFarmer()" style="margin-bottom:8px">Save Beneficiary</button>
+    <button class="btn btn-ghost" onclick="showScreen('home')">Cancel</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══ DETAIL ══ -->
+<div id="detail" class="screen">
+  <div class="det-hero">
+    <button class="hdr-back" onclick="showScreen('home')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Back
+    </button>
+    <div class="det-name" id="d-name">—</div>
+    <div class="det-meta" id="d-meta">—</div>
+    <div class="det-tags" id="d-tags"></div>
+    <div class="det-prog">
+      <div>
+        <div class="det-prog-txt">Season 1 progress</div>
+        <div class="det-prog-bar"><div class="det-prog-fill" id="d-prog-bar"></div></div>
+      </div>
+      <div class="det-prog-num" id="d-prog-num">0/8</div>
+    </div>
+  </div>
+  <div style="padding:16px">
+
+    <!-- ── UPDATE SUBMISSION BOX ── -->
+    <div class="update-box" id="update-box">
+      <div class="update-box-title">Submit Step Update</div>
+      <div class="update-box-sub" id="update-box-sub">Log progress for any of the 8 steps</div>
+
+      <div class="update-step-sel">
+        <label class="form-label" style="margin-bottom:6px">Step</label>
+        <div class="sel-wrap">
+          <select class="form-select" id="upd-step" onchange="onStepChange()">
+            <option value="">Select step...</option>
+            <option value="S1">S1 · Land Demarcation</option>
+            <option value="S2">S2 · Start Compost</option>
+            <option value="S3">S3 · Vermicompost Setup</option>
+            <option value="S4">S4 · Jeevamrut Preparation</option>
+            <option value="S5">S5 · Soil Preparation</option>
+            <option value="S6">S6 · Seed Treatment &amp; Sowing</option>
+            <option value="S7">S7 · Organic Pest Management</option>
+            <option value="S8">S8 · Harvest &amp; Income Recording</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="form-label" style="margin-bottom:8px">Status</label>
+      <div class="status-grid">
+        <div class="s-btn" onclick="pickStatus('Done',this)"><div class="icon">✓</div><div class="lbl">Done</div></div>
+        <div class="s-btn" onclick="pickStatus('In Progress',this)"><div class="icon">◑</div><div class="lbl">In Progress</div></div>
+        <div class="s-btn" onclick="pickStatus('Not Started',this)"><div class="icon">○</div><div class="lbl">Not Started</div></div>
+        <div class="s-btn" onclick="pickStatus('Dropped',this)"><div class="icon">✕</div><div class="lbl">Dropped</div></div>
+      </div>
+
+      <div class="photo-zone" id="pzone" onclick="document.getElementById('photo-in').click()">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" style="margin:0 auto;display:block"><rect x="2" y="6" width="18" height="13" rx="3" stroke="#0D2B6B" stroke-width="1.4"/><circle cx="11" cy="12.5" r="3.5" stroke="#0D2B6B" stroke-width="1.4"/><path d="M7 6l1.5-2.5h5L15 6" stroke="#0D2B6B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p id="pzone-lbl">Tap to take or upload photo</p>
+        <div class="photo-fn" id="pzone-fn"></div>
+      </div>
+      <input type="file" id="photo-in" accept="image/*" capture="environment" onchange="handlePhoto(this)">
+
+      <textarea class="notes-in" id="upd-notes" placeholder="Notes / observations (optional)…"></textarea>
+
+      <button class="btn btn-primary" id="submit-upd-btn" onclick="submitUpdate()">Submit Update</button>
+    </div>
+
+    <!-- Steps list -->
+    <div class="sec-title">8-Step Progress</div>
+    <div class="steps-list" id="steps-list"></div>
+
+    <!-- Survey profile -->
+    <div class="sec-title">Farmer Profile</div>
+    <div class="survey-grid" id="survey-grid"></div>
+
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="dashboard" class="screen">
+  <div style="padding:16px">
+    <div class="kpi-grid">
+      <div class="kpi k1" style="cursor:pointer" onclick="navigateFromKpi('all')"><div class="kpi-n" id="k1">0</div><div class="kpi-l">Total farmers</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:4px">tap to view →</div></div>
+      <div class="kpi k2" style="cursor:pointer" onclick="navigateFromKpi('area')"><div class="kpi-n" id="k2">0</div><div class="kpi-l">Total bigha (organic)</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:4px">tap to view →</div></div>
+      <div class="kpi k3" style="cursor:pointer" onclick="navigateFromKpi('active')"><div class="kpi-n" id="k3">0</div><div class="kpi-l">Active (last 45 days)</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:4px">tap to view →</div></div>
+      <div class="kpi k4" style="cursor:pointer" onclick="navigateFromKpi('dropped')"><div class="kpi-n" id="k4">0</div><div class="kpi-l">Dropped farmers</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:4px">tap to view →</div></div>
+    </div>
+    <div class="sec-title" style="margin-bottom:10px">Step completion</div>
+    <div class="prog-card" id="step-progs"></div>
+    <div class="sec-title" style="margin:14px 0 10px">Recent activity</div>
+    <div class="log-card" id="log-card"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    Farmers
+  </button>
+  <button class="nav-btn" id="nav-add" onclick="showScreen('add-farmer')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/><path d="M19 13v6M16 16h6"/></svg>
+    Add Farmer
+  </button>
+  <button class="nav-btn" id="nav-dash" onclick="showScreen('dashboard')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="13" width="7" height="8" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/><rect x="3" y="3" width="7" height="6" rx="1"/></svg>
+    Dashboard
+  </button>
+</nav>
+</div>
+
+<!-- STEP MODAL -->
+<div class="overlay" id="modal" onclick="maybeCloseModal(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div id="m-badge" style="margin-bottom:8px"></div>
+    <div class="sheet-title" id="m-title"></div>
+    <div class="sheet-sub" id="m-sub"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px">Key tips</div>
+    <div id="m-tips"></div>
+    <button class="sheet-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const DISTRICT_TALUKAS = {
+  "Ahmedabad":      ["Ahmedabad City","Bavla","Daskroi","Detroj-Rampura","Dhandhuka","Dholera","Dholka","Mandal","Sanand","Viramgam"],
+  "Amreli":         ["Amreli","Bagasara","Babra","Dhari","Jafrabad","Khambha","Kunkavav Vadia","Lathi","Lilia","Rajula","Savarkundla"],
+  "Anand":          ["Anand","Anklav","Borsad","Cambay","Khambhat","Petlad","Sojitra","Tarapur","Umreth"],
+  "Aravalli":       ["Bayad","Dhansura","Idar","Khedbrahma","Malpur","Meghraj","Modasa"],
+  "Banaskantha":    ["Amirgadh","Bhabhar","Danta","Dantiwada","Deodar","Dhanera","Kankrej","Lakhani","Palanpur","Tharad","Vav","Vadgam"],
+  "Bharuch":        ["Amod","Ankleshwar","Bharuch","Hansot","Jambusar","Jhagadia","Netrang","Vagra","Valia"],
+  "Bhavnagar":      ["Bhavnagar","Gariadhar","Ghogha","Jesar","Mahuva","Palitana","Shihor","Talaja","Umrala","Vallabhipur"],
+  "Botad":          ["Barwala","Botad","Gadhada","Ranpur"],
+  "Chhotaudaipur":  ["Bodeli","Chhota Udaipur","Jetpur Pavi","Kavant","Nasvadi","Sankheda"],
+  "Dahod":          ["Dahod","Devgadh Baria","Dhanpur","Fatepura","Garbada","Jhalod","Limkheda","Sanjeli","Zalod"],
+  "Devbhumi Dwarka":["Bhanvad","Dwarka","Kalyanpur","Khambhalia"],
+  "Gandhinagar":    ["Dahegam","Gandhinagar","Kalol","Mansa"],
+  "Gir Somnath":    ["Gir Gadhada","Kodinar","Sutrapada","Talala","Una","Veraval"],
+  "Jamnagar":       ["Dhrol","Jamjodhpur","Jamnagar","Jodia","Kalavad","Khambhalia","Lalpur"],
+  "Junagadh":       ["Bhesan","Junagadh","Keshod","Mangrol","Mendarda","Malia","Talala","Visavadar","Vanthali"],
+  "Kheda":          ["Balasinor","Kapadvanj","Kathlal","Kheda","Mahudha","Matar","Mehmedabad","Nadiad","Thasra","Vaso"],
+  "Kutch":          ["Abdasa","Anjar","Bhachau","Bhuj","Gandhidham","Lakhpat","Mandvi","Mundra","Nakhatrana","Rapar"],
+  "Mahisagar":      ["Balasinor","Kadana","Khanpur","Lunawada","Santrampur","Virpur"],
+  "Mehsana":        ["Becharaji","Kadi","Kalol","Mahesana","Satlasana","Sidhpur","Unjha","Vadnagar","Vijapur","Visnagar"],
+  "Morbi":          ["Halvad","Morbi","Tankara","Wankaner"],
+  "Narmada":        ["Dediapada","Garudeshwar","Nandod","Rajpipla","Sagbara","Tilakwada"],
+  "Navsari":        ["Chikhli","Gandevi","Jalalpore","Khergam","Navsari","Vansda"],
+  "Panchmahal":     ["Ghoghamba","Godhra","Halol","Jambughoda","Kalol","Lunawada","Morwa Hadaf","Shehera"],
+  "Patan":          ["Chanasma","Harij","Patan","Radhanpur","Santalpur","Sami","Sidhpur"],
+  "Porbandar":      ["Kutiyana","Porbandar","Ranavav"],
+  "Rajkot":         ["Dhoraji","Gondal","Jasdan","Jetpur","Kotda Sangani","Lodhika","Paddhari","Rajkot","Tankara","Upleta","Vinchhiya","Wankaner"],
+  "Sabarkantha":    ["Bayad","Himmatnagar","Idar","Khedbrahma","Malpur","Meghraj","Modasa","Prantij","Talod","Vadali","Vijaynagar"],
+  "Surat":          ["Bardoli","Choryasi","Kamrej","Mandvi","Mangrol","Olpad","Palsana","Surat City","Umarpada","Mahuva"],
+  "Surendranagar":  ["Chotila","Dhrangadhra","Halvad","Limbdi","Lakhtar","Muli","Sayla","Surendranagar","Wadhwan"],
+  "Tapi":           ["Dolvan","Kukarmunda","Nizar","Songadh","Uchchhal","Valod","Vyara"],
+  "Vadodara":       ["Dabhoi","Desar","Karjan","Padra","Savli","Shinor","Vadodara City","Waghodia"],
+  "Valsad":         ["Dharampur","Kaprada","Pardi","Umbergaon","Valsad","Vapi"],
+  "Narmada":        ["Dediapada","Garudeshwar","Nandod","Rajpipla","Sagbara","Tilakwada"],
+};
+
+
+const USERS = {
+  pm:  { id:'pm',  name:'PM',  role:'pm', fc:'',         initials:'PM',  color:'#C8A84B', district:'All' },
+  fc1: { id:'fc1', name:'FC1', role:'fc', fc:'FC1',       initials:'FC1', color:'#1D9E75', district:'' },
+  fc2: { id:'fc2', name:'FC2', role:'fc', fc:'FC2',       initials:'FC2', color:'#378ADD', district:'' },
+};
+let currentUser = null;
+
+function loginAs(userId) {
+  currentUser = USERS[userId];
+  currentRole = currentUser.role;
+  // Update header
+  document.getElementById('hdr-title').textContent = 'KRSF Organic';
+  document.getElementById('hdr-sub').textContent =
+    currentUser.role === 'pm'
+      ? 'Program Manager · All districts'
+      : currentUser.name + ' · Field Coordinator';
+  document.getElementById('av-btn').textContent  = currentUser.initials;
+  document.getElementById('av-btn').style.background = currentUser.color + '30';
+  document.getElementById('av-btn').style.borderColor = currentUser.color + '60';
+  document.getElementById('av-btn').style.color = currentUser.color;
+  // Hide login, show app
+  document.getElementById('login-screen').style.display = 'none';
+  renderHome();
+  loadFarmersFromSheet();
+}
+
+function logout() {
+  currentUser = null;
+  currentRole = 'fc';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+const STEPS_META = {
+  S1:{name:"Land Demarcation",     tip:"Buffer min 2 ft wide. No buffer = no certification."},
+  S2:{name:"Start Compost",        tip:"Start 60 days before sowing. 3:1:1 ratio dry:green:FYM."},
+  S3:{name:"Vermicompost Setup",   tip:"Eisenia fetida only. 1 kg per sq ft of bed area."},
+  S4:{name:"Jeevamrut Preparation",tip:"Desi cow only. Non-chlorinated water. Use within 3 days."},
+  S5:{name:"Soil Preparation",     tip:"Target pH 6.0–7.5, OC >0.8%. Never till wet soil."},
+  S6:{name:"Seed Treatment & Sowing",tip:"No hybrid/BT/GM seeds. Re-sow if germination <75% at Day 10."},
+  S7:{name:"Organic Pest Management",tip:"NEVER use Carbofuran or Chlorpyrifos — auto Dropped status."},
+  S8:{name:"Harvest & Income Recording",tip:"Certified scale only. Record both farm-gate and mandi price."},
+};
+
+const STEP_ORDER = ['S1','S2','S3','S4','S5','S6','S7','S8'];
+const STEP_COLORS = {
+  S1:"#1565C0",S2:"#2E7D32",S3:"#558B2F",S4:"#1B5E20",
+  S5:"#6A1B9A",S6:"#E65100",S7:"#880E4F",S8:"#C8A84B"
+};
+
+let FARMERS = [
+  {id:"GJ-HMT-001",name:"Rameshbhai Patel",   mobile:"9876543210",age:"48",gender:"M",district:"Aravalli",    taluka:"Idar",       village:"Uchhal",        income:"₹1–2 lakh",  incSrc:"Farming",land:"5",  irr:"Borewell",water:"Year-round",chem:"Y",chemCost:"8500",livestock:"Cow",liveCount:"2 Cow, 1 Goat",fym:"Y",ready:"Y",convert:"3",support:"Training,Inputs",concern:"Yield drop",fc:"FC1",surveyDate:"15/06/2024",  crop1:"Bajri",c1a:"3",c1y:"400 kg",c1i:"18000",crop2:"Wheat",c2a:"1.5",c2y:"350 kg",c2i:"14000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"In Progress",S8:"Not Started",lastUpdated:"25/03/2026"}},
+  {id:"GJ-HMT-002",name:"Laxmiben Solanki",   mobile:"9988776655",age:"35",gender:"F",district:"Aravalli",    taluka:"Khedbrahma", village:"Khedbrahma",    income:"₹1–2 lakh",  incSrc:"Farming",land:"3",  irr:"Rain-fed",water:"Seasonal",  chem:"Y",chemCost:"4200",livestock:"Goat",liveCount:"5 Goat",   fym:"Y",ready:"Y",convert:"2",support:"Market Linkage",concern:"Price uncertainty",fc:"FC1",surveyDate:"18/06/2024",crop1:"Tuver",c1a:"2",c1y:"300 kg",c1i:"9000", crop2:"Bajri",c2a:"0.5",c2y:"200 kg",c2i:"6000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"Done",lastUpdated:"22/03/2026"}},
+  {id:"GJ-SRT-001",name:"Kantibhai Vasava",    mobile:"9765432109",age:"52",gender:"M",district:"Surat",       taluka:"Mandvi",     village:"Mandvi",        income:"₹2–5 lakh",  incSrc:"Farming",land:"4",  irr:"Canal",   water:"Year-round",chem:"Y",chemCost:"11000",livestock:"Cow",liveCount:"1 Cow, 1 Buffalo",fym:"Y",ready:"Y",convert:"1.5",support:"Technical Guidance",concern:"Pest risk",fc:"FC2",surveyDate:"12/06/2024",   crop1:"Maize",c1a:"1.5",c1y:"600 kg",c1i:"15000",crop2:"Vegetables",c2a:"1",c2y:"Seasonal",c2i:"22000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"In Progress",S6:"Not Started",S7:"Not Started",S8:"Not Started",lastUpdated:"17/03/2026"}},
+  {id:"GJ-NMD-001",name:"Gitaben Tadvi",       mobile:"9654321098",age:"40",gender:"F",district:"Narmada",     taluka:"Rajpipla",   village:"Rajpipla",      income:"₹1–2 lakh",  incSrc:"Farming",land:"6",  irr:"Borewell",water:"Seasonal",  chem:"Y",chemCost:"6800",livestock:"Goat",liveCount:"3 Goat",   fym:"N",ready:"Y",convert:"4",support:"Training",concern:"Labour cost",fc:"FC2",surveyDate:"16/06/2024",   crop1:"Arhar",c1a:"4",c1y:"500 kg",c1i:"20000",crop2:"Moong",c2a:"1.5",c2y:"200 kg",c2i:"6000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"In Progress",S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started",lastUpdated:"07/03/2026"}},
+  {id:"GJ-NMD-002",name:"Dilipbhai Aahir",     mobile:"9543210987",age:"44",gender:"M",district:"Narmada",     taluka:"Garudeshwar",village:"Garudeshwar",   income:"₹1–2 lakh",  incSrc:"Farming",land:"5",  irr:"Well",    water:"Seasonal",  chem:"Y",chemCost:"9500",livestock:"Cow",liveCount:"2 Cow, 1 Buffalo",fym:"Y",ready:"Y",convert:"2.5",support:"Inputs",concern:"Price uncertainty",fc:"FC2",surveyDate:"20/06/2024",crop1:"Bhindi",c1a:"2.5",c1y:"700 kg",c1i:"28000",crop2:"Maize",c2a:"1",c2y:"450 kg",c2i:"13000",steps:{S1:"Done",S2:"Done",S3:"In Progress",S4:"Not Started",S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started",lastUpdated:"25/02/2026"}},
+  {id:"GJ-DHD-001",name:"Savitaben Rathwa",    mobile:"9432109876",age:"38",gender:"F",district:"Dahod",       taluka:"Devgadh Baria",village:"Devgadh Baria",income:"Less than ₹1 lakh",incSrc:"Farming",land:"2",irr:"Rain-fed",water:"Scarce",chem:"Y",chemCost:"2800",livestock:"None",liveCount:"—",fym:"N",ready:"Y",convert:"1",support:"Training,Inputs",concern:"Yield drop",fc:"FC1",surveyDate:"28/06/2024",crop1:"Moong",c1a:"1",c1y:"150 kg",c1i:"4500",crop2:"Bajri",c2a:"0.5",c2y:"180 kg",c2i:"5000",steps:{S1:"Done",S2:"In Progress",S3:"Not Started",S4:"Not Started",S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started",lastUpdated:"05/02/2026"}},
+  {id:"GJ-CUD-001",name:"Bhikhabhai Baria",    mobile:"9321098765",age:"55",gender:"M",district:"Chhotaudaipur",taluka:"Sankheda",  village:"Bodeli",        income:"₹2–5 lakh",  incSrc:"Farming",land:"7",  irr:"Borewell",water:"Year-round",chem:"Y",chemCost:"14500",livestock:"Cow",liveCount:"3 Cow, 2 Buffalo, 2 Goat",fym:"Y",ready:"Y",convert:"3.5",support:"All of the above",concern:"Pest risk",fc:"FC1",surveyDate:"23/06/2024",crop1:"Groundnut",c1a:"3.5",c1y:"800 kg",c1i:"32000",crop2:"Cotton",c2a:"2",c2y:"600 kg",c2i:"18000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"Done",lastUpdated:"24/03/2026"}},
+  {id:"GJ-CUD-002",name:"Manishaben Gamit",    mobile:"9210987654",age:"31",gender:"F",district:"Chhotaudaipur",taluka:"Chhota Udaipur",village:"Chhota Udaipur",income:"₹1–2 lakh",incSrc:"Farming",land:"3",irr:"Well",water:"Seasonal",chem:"Y",chemCost:"4000",livestock:"Goat",liveCount:"4 Goat",fym:"Y",ready:"Y",convert:"2",support:"Market Linkage",concern:"Price uncertainty",fc:"FC1",surveyDate:"02/07/2024",crop1:"Jowar",c1a:"2",c1y:"350 kg",c1i:"8000",crop2:"Vegetables",c2a:"0.5",c2y:"Seasonal",c2i:"9000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"In Progress",S7:"Not Started",S8:"Not Started",lastUpdated:"19/03/2026"}},
+  {id:"GJ-BNS-001",name:"Naranbhai Chaudhary",mobile:"9876501234",age:"50",gender:"M",district:"Banaskantha",  taluka:"Tharad",     village:"Tharad",        income:"₹1–2 lakh",  incSrc:"Farming",land:"8",  irr:"Borewell",water:"Seasonal",  chem:"Y",chemCost:"12000",livestock:"Cow",liveCount:"3 Cow",fym:"Y",ready:"Y",convert:"5",support:"Inputs,Training",concern:"Yield drop",fc:"FC2",surveyDate:"10/06/2024",crop1:"Bajri",c1a:"5",c1y:"600 kg",c1i:"22000",crop2:"Castor",c2a:"2",c2y:"500 kg",c2i:"25000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"In Progress",S8:"Not Started",lastUpdated:"12/03/2026"}},
+  {id:"GJ-JNR-001",name:"Bhaveshbhai Kachhi",  mobile:"9876098765",age:"49",gender:"M",district:"Junagadh",    taluka:"Visavadar",  village:"Visavadar",     income:"₹2–5 lakh",  incSrc:"Farming",land:"6",  irr:"Borewell",water:"Year-round",chem:"Y",chemCost:"16000",livestock:"Cow",liveCount:"3 Cow, 1 Buffalo",fym:"Y",ready:"Y",convert:"4",support:"Market Linkage",concern:"Price uncertainty",fc:"FC2",surveyDate:"14/06/2024",crop1:"Groundnut",c1a:"4",c1y:"900 kg",c1i:"36000",crop2:"Cotton",c2a:"1",c2y:"700 kg",c2i:"21000",steps:{S1:"Done",S2:"Done",S3:"Done",S4:"Done",S5:"Done",S6:"Done",S7:"Done",S8:"Done",lastUpdated:"26/01/2026"}},
+];
+
+let activityLog = [
+  {dot:'d',text:'<b>Bhaveshbhai Kachhi</b> — <span>S8 Harvest marked Done</span>',time:'Today 9:41'},
+  {dot:'d',text:'<b>Laxmiben Solanki</b> — <span>S8 Harvest marked Done</span>',time:'Today 8:15'},
+  {dot:'p',text:'<b>Rameshbhai Patel</b> — <span>S7 Pest Mgmt In Progress</span>',time:'Yesterday'},
+  {dot:'d',text:'<b>Bhikhabhai Baria</b> — <span>S8 Season 1 Complete</span>',time:'2 days ago'},
+  {dot:'p',text:'<b>Kantibhai Vasava</b> — <span>S5 Soil Prep In Progress</span>',time:'3 days ago'},
+];
+
+// ── State ──
+let currentFarmer = null;
+let selectedStatus = null;
+let activeDistrict = null;
+let activeTaluka   = null;
+let activeStatusFilter = 'all';
+let activeStepFilter = null;   // null = all, 'S1'..'S8' = completed that step
+let currentRole = 'fc';
+
+// ── Helpers ──
+const countDone = f => STEP_ORDER.filter(s=>f.steps[s]==='Done').length;
+const getNextStep = f => STEP_ORDER.find(s=>f.steps[s]==='In Progress') || STEP_ORDER.find(s=>f.steps[s]==='Not Started') || 'S8';
+const getStatusClass = f => {
+  const d = countDone(f);
+  if (d===8) return 'done';
+  if (Object.values(f.steps).includes('Dropped')) return 'drop';
+  if (d>0||Object.values(f.steps).includes('In Progress')) return 'active';
+  return 'new';
+};
+
+// ── Radio helper ──
+function pickRadio(groupId, el, val) {
+  document.querySelectorAll(`#${groupId} .radio-opt`).forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
+  el.dataset.val = val;
+}
+function getRadioVal(groupId) {
+  const sel = document.querySelector(`#${groupId} .radio-opt.on`);
+  return sel ? sel.dataset.val : '';
+}
+function toggleMultiChip(el, groupId) {
+  el.classList.toggle('on');
+}
+function getMultiChipVals(groupId) {
+  return [...document.querySelectorAll(`#${groupId} .multi-chip.on`)].map(e=>e.textContent).join(', ');
+}
+
+// ── Toast ──
+function toast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (isErr?' err':'');
+  setTimeout(()=>t.className='toast',2800);
+}
+
+// ══════════════════════════════════════════
+// SCREEN NAVIGATION
+// ══════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  ['nav-home','nav-add','nav-dash'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  const navMap = {'home':'nav-home','add-farmer':'nav-add','dashboard':'nav-dash','detail':'nav-home'};
+  if (navMap[name]) document.getElementById(navMap[name]).classList.add('active');
+  const titles = {home:'KRSF Organic','add-farmer':'Add Beneficiary',detail:currentFarmer?.name||'Farmer',dashboard:'Dashboard'};
+  document.getElementById('hdr-title').textContent = titles[name]||'KRSF Organic';
+  if (name==='dashboard') renderDashboard();
+  if (name==='home') renderHome();
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════
+// HOME — FILTERS + LIST
+// ══════════════════════════════════════════
+function renderHome() {
+  renderDistrictChips();
+  renderFarmerList();
+}
+
+function renderDistrictChips() {
+  const districts = [...new Set(FARMERS.map(f=>f.district))].sort();
+  const el = document.getElementById('district-chips');
+  el.innerHTML = districts.map(d =>
+    `<div class="loc-chip district ${activeDistrict===d?'on':''}" onclick="selectDistrict('${d}',this)">${d}</div>`
+  ).join('');
+}
+
+function selectDistrict(dist, el) {
+  if (activeDistrict === dist) {
+    activeDistrict = null; activeTaluka = null;
+    document.getElementById('taluka-wrap').style.display = 'none';
+  } else {
+    activeDistrict = dist; activeTaluka = null;
+    renderTalukaChips(dist);
+    document.getElementById('taluka-wrap').style.display = 'block';
+  }
+  renderDistrictChips();
+  renderFarmerList();
+}
+
+function renderTalukaChips(dist) {
+  const talukas = [...new Set(FARMERS.filter(f=>f.district===dist).map(f=>f.taluka))].sort();
+  const el = document.getElementById('taluka-chips');
+  el.innerHTML = talukas.map(t =>
+    `<div class="loc-chip ${activeTaluka===t?'on':''}" onclick="selectTaluka('${t}',this)">${t}</div>`
+  ).join('');
+}
+
+function selectTaluka(tal, el) {
+  activeTaluka = activeTaluka === tal ? null : tal;
+  document.querySelectorAll('.taluka-grid .loc-chip').forEach(c=>c.classList.remove('on'));
+  if (activeTaluka) el.classList.add('on');
+  renderFarmerList();
+}
+
+function setStatusFilter(f, el) {
+  activeStatusFilter = f;
+  document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  renderFarmerList();
+}
+function setStepFilter(stepCode, el) {
+  activeStepFilter = stepCode;
+  document.querySelectorAll('#step-filter-chips .loc-chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  renderFarmerList();
+}
+
+function renderFarmerList() {
+  let farmers = FARMERS;
+  if (currentRole==='fc' && currentUser) farmers = farmers.filter(f=>f.fc===currentUser.fc);
+  if (activeDistrict) farmers = farmers.filter(f=>f.district===activeDistrict);
+  if (activeTaluka)   farmers = farmers.filter(f=>f.taluka===activeTaluka);
+  // Step completion filter — show only farmers who have completed that step
+  if (activeStepFilter) {
+    farmers = farmers.filter(f => f.steps[activeStepFilter] === 'Done');
+  }
+
+  document.getElementById('s-total').textContent = farmers.length;
+  document.getElementById('s-active').textContent = farmers.filter(f=>{const d=countDone(f);return d>0&&d<8;}).length;
+  document.getElementById('s-done').textContent   = farmers.filter(f=>countDone(f)===8).length;
+
+  const list = document.getElementById('farmer-list');
+  if (!farmers.length) {
+    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text3);font-size:13px">No farmers match this filter</div>`;
+    return;
+  }
+  list.innerHTML = farmers.map(f => {
+    const done = countDone(f); const pct = Math.round(done/8*100);
+    const sc = getStatusClass(f);
+    const bCls = sc==='done'?'bd':sc==='active'?'bp':sc==='drop'?'br':'bn';
+    const bLbl = sc==='done'?'Season Complete':sc==='active'?STEPS_META[getNextStep(f)].name:sc==='drop'?'Dropped':'Not started';
+    return `<div class="f-card" onclick="openFarmer('${f.id}')">
+      <div class="f-card-top">
+        <div>
+          <div class="f-name">${f.name}</div>
+          <div class="f-sub">${f.village} · ${f.taluka} · ${f.district}</div>
+          <div class="f-id">${f.id}</div>
+        </div>
+        <span class="badge ${bCls}">${bLbl}</span>
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+      <div class="f-foot">
+        <div class="f-foot-l"><b>${done}</b>/8 steps · ${f.crop1}</div>
+        <div class="f-foot-r">${f.land} bigha</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// ADD FARMER
+// ══════════════════════════════════════════
+function populateDistrictDropdown() {
+  const sel = document.getElementById('f-district');
+  Object.keys(DISTRICT_TALUKAS).sort().forEach(d => {
+    const o = document.createElement('option'); o.value = o.textContent = d; sel.appendChild(o);
+  });
+}
+
+function populateTalukaDropdown() {
+  const dist = document.getElementById('f-district').value;
+  const sel  = document.getElementById('f-taluka');
+  sel.innerHTML = '<option value="">Select taluka...</option>';
+  if (dist && DISTRICT_TALUKAS[dist]) {
+    DISTRICT_TALUKAS[dist].forEach(t => {
+      const o = document.createElement('option'); o.value = o.textContent = t; sel.appendChild(o);
+    });
+  }
+}
+
+function generateFarmerID(district) {
+  const codemap = {
+    "Aravalli":"HMT","Surat":"SRT","Narmada":"NMD","Dahod":"DHD",
+    "Chhotaudaipur":"CUD","Banaskantha":"BNS","Vadodara":"VDR","Panchmahal":"PNC",
+    "Anand":"ANK","Sabarkantha":"SAB","Kutch":"KCH","Junagadh":"JNR","Tapi":"TPI","Gandhinagar":"GND"
+  };
+  const code = codemap[district] || district.slice(0,3).toUpperCase();
+  const existing = FARMERS.filter(f=>f.district===district).length + 1;
+  return `GJ-${code}-${String(existing).padStart(3,'0')}`;
+}
+
+function buildLivestockStr() {
+  const cow  = parseInt(document.getElementById('f-cow').value)||0;
+  const buf  = parseInt(document.getElementById('f-buffalo').value)||0;
+  const goat = parseInt(document.getElementById('f-goat').value)||0;
+  const oth  = parseInt(document.getElementById('f-live-other').value)||0;
+  const parts = [];
+  if (cow)  parts.push(`${cow} Cow`);
+  if (buf)  parts.push(`${buf} Buffalo`);
+  if (goat) parts.push(`${goat} Goat`);
+  if (oth)  parts.push(`${oth} Other`);
+  return parts.length ? parts.join(', ') : 'None';
+}
+function submitNewFarmer() {
+  const name     = document.getElementById('f-name').value.trim();
+  const mobile   = document.getElementById('f-mobile').value.trim();
+  const district = document.getElementById('f-district').value;
+  const taluka   = document.getElementById('f-taluka').value;
+  const village  = document.getElementById('f-village').value.trim();
+  const land     = document.getElementById('f-land').value;
+  const convert  = document.getElementById('f-convert').value;
+  const fc       = document.getElementById('f-fc').value.trim();
+  const ready    = getRadioVal('f-ready');
+
+  if (!name||!mobile||!district||!taluka||!village||!land||!convert||!fc) {
+    toast('Please fill all required fields (*)', true); return;
+  }
+  if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+    toast('Mobile number must be 10 digits', true); return;
+  }
+
+  const newFarmer = {
+    id: generateFarmerID(district),
+    name, mobile,
+    age:    document.getElementById('f-age').value,
+    gender: getRadioVal('f-gender'),
+    district, taluka, village,
+    income: document.getElementById('f-income').value,
+    incSrc: getRadioVal('f-income-src'),
+    land, convert,
+    irr:      document.getElementById('f-irr').value,
+    water:    document.getElementById('f-water').value,
+    chem:     getRadioVal('f-chem'),
+    chemCost: document.getElementById('f-chem-cost').value,
+    livestock:  buildLivestockStr(),
+    liveCount:  buildLivestockStr(),
+    fym:        getRadioVal('f-fym'),
+    ready,
+    support:    getMultiChipVals('f-support-multi'),
+    concern:    getMultiChipVals('f-concern-multi'),
+    fc,
+    surveyDate: document.getElementById('f-survey-date').value,
+    crop1: document.getElementById('c1n').value, c1a: document.getElementById('c1a').value,
+    c1y:   document.getElementById('c1y').value, c1i: document.getElementById('c1i').value,
+    crop2: document.getElementById('c2n').value, c2a: document.getElementById('c2a').value,
+    c2y:   document.getElementById('c2y').value, c2i: document.getElementById('c2i').value,
+    steps: {S1:"Not Started",S2:"Not Started",S3:"Not Started",S4:"Not Started",
+            S5:"Not Started",S6:"Not Started",S7:"Not Started",S8:"Not Started"}
+  };
+
+  // Stamp creation date as lastUpdated
+  const _now = new Date();
+  newFarmer.lastUpdated = `${String(_now.getDate()).padStart(2,'0')}/${String(_now.getMonth()+1).padStart(2,'0')}/${_now.getFullYear()}`;
+  FARMERS.push(newFarmer);
+  syncNewFarmer(newFarmer);
+  toast(`${name} added successfully — ID: ${newFarmer.id}`);
+  // Reset form
+  document.getElementById('add-form-body').querySelectorAll('input,select,textarea').forEach(el=>{el.value='';});
+  document.querySelectorAll('.radio-opt.on').forEach(el=>el.classList.remove('on'));
+  setTimeout(()=>showScreen('home'), 1000);
+}
+
+// ══════════════════════════════════════════
+// DETAIL + UPDATE
+// ══════════════════════════════════════════
+function openFarmer(id) {
+  currentFarmer = FARMERS.find(f=>f.id===id);
+  if (!currentFarmer) return;
+  selectedStatus = null;
+
+  const f = currentFarmer;
+  document.getElementById('d-name').textContent = f.name;
+  document.getElementById('d-meta').textContent = `${f.id} · ${f.land} bigha · ${f.crop1}`;
+  document.getElementById('d-tags').innerHTML =
+    `<span class="det-tag">${f.district}</span><span class="det-tag">${f.taluka}</span><span class="det-tag">${f.fc}</span>`;
+
+  const done = countDone(f);
+  document.getElementById('d-prog-num').textContent = `${done}/8`;
+  document.getElementById('d-prog-bar').style.width = (done/8*100)+'%';
+
+  // Pre-select next pending step in the update box
+  const nextStep = getNextStep(f);
+  const stepSel = document.getElementById('upd-step');
+  stepSel.value = nextStep;
+  document.getElementById('update-box-sub').textContent =
+    `Next step: ${STEPS_META[nextStep]?.name || 'All complete'}`;
+
+  // Reset update box
+  document.querySelectorAll('.s-btn').forEach(b=>b.className='s-btn');
+  document.getElementById('upd-notes').value = '';
+  document.getElementById('pzone').className = 'photo-zone';
+  document.getElementById('pzone-lbl').textContent = 'Tap to take or upload photo';
+  document.getElementById('pzone-fn').textContent = '';
+
+  renderStepsList(f);
+  renderSurveyGrid(f);
+  showScreen('detail');
+}
+
+function renderStepsList(f) {
+  document.getElementById('steps-list').innerHTML = STEP_ORDER.map(s => {
+    const st = f.steps[s];
+    const cls = st==='Done'?'done':st==='In Progress'?'prog':st==='Dropped'?'drop':'';
+    const dc  = st==='Done'?'done':st==='In Progress'?'prog':st==='Dropped'?'drop':'ns';
+    const icon= st==='Done'?'✓':st==='In Progress'?'◑':st==='Dropped'?'✕':s.replace('S','');
+    return `<div class="s-item ${cls}" onclick="openStepModal('${s}')">
+      <div class="s-dot ${dc}">${icon}</div>
+      <div class="s-info">
+        <div class="s-name">${s}: ${STEPS_META[s].name}</div>
+        <div class="s-meta">${st}</div>
+      </div>
+      <div class="s-chev">›</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSurveyGrid(f) {
+  document.getElementById('survey-grid').innerHTML = [
+    ['Village', f.village], ['Taluka', f.taluka],
+    ['Total land', `${f.land} bigha`], ['Convert', `${f.convert} bigha`],
+    ['Income', f.income], ['Primary income', f.incSrc],
+    ['Irrigation', f.irr], ['Water', f.water],
+    ['Chemicals', f.chem==='Y'?'Yes':'No'], ['Chem cost', f.chemCost?`₹${Number(f.chemCost).toLocaleString()}`:'—'],
+    ['Livestock', f.livestock||'—'], ['Uses FYM', f.fym==='Y'?'Yes':'No'],
+    ['Crop 1', `${f.crop1} (${f.c1a} bigha)`], ['Crop 2', f.crop2||'—'],
+    ['Concern', f.concern||'—'], ['Support needed', f.support||'—'],
+  ].map(([l,v])=>`<div class="sv-item"><div class="sv-lbl">${l}</div><div class="sv-val">${v}</div></div>`).join('');
+}
+
+function onStepChange() {
+  const step = document.getElementById('upd-step').value;
+  if (step) {
+    document.getElementById('update-box-sub').textContent = STEPS_META[step]?.tip || '';
+    updatePhotoName();
+  }
+}
+
+function pickStatus(st, el) {
+  selectedStatus = st;
+  document.querySelectorAll('.s-btn').forEach(b=>b.className='s-btn');
+  const map={'Done':'sel-done','In Progress':'sel-prog','Not Started':'sel-ns','Dropped':'sel-drop'};
+  el.classList.add(map[st]);
+}
+
+function updatePhotoName() {
+  const fid  = currentFarmer?.id || '';
+  const step = document.getElementById('upd-step').value;
+  if (fid && step) {
+    const d = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    document.getElementById('pzone-fn').textContent = `${fid}_${step}_${d}.jpg`;
+  }
+}
+
+function handlePhoto(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('pzone').className = 'photo-zone has';
+    document.getElementById('pzone-lbl').textContent = 'Photo attached ✓';
+    updatePhotoName();
+  }
+}
+
+function submitUpdate() {
+  const step   = document.getElementById('upd-step').value;
+  const notes  = document.getElementById('upd-notes').value;
+  if (!step)            { toast('Select a step first', true); return; }
+  if (!selectedStatus)  { toast('Select a status', true); return; }
+  if (!currentFarmer)   return;
+
+  currentFarmer.steps[step] = selectedStatus;
+  // Update lastUpdated timestamp
+  const now2 = new Date();
+  const dd = String(now2.getDate()).padStart(2,'0');
+  const mm = String(now2.getMonth()+1).padStart(2,'0');
+  const yyyy = now2.getFullYear();
+  currentFarmer.lastUpdated = `${dd}/${mm}/${yyyy}`;
+  // Sync to Google Sheets
+  const _photoFile = selectedPhotoFile;
+  const _photoName = document.getElementById('pzone-fn').textContent || '';
+  let _photoUrl = '';
+  if (_photoFile && _photoName) {
+    uploadPhotoToDrive(_photoFile, _photoName).then(url => {
+      if (url) _photoUrl = url;
+    });
+  }
+  syncStepUpdate(
+    currentFarmer.id, step, selectedStatus,
+    document.getElementById('upd-notes').value,
+    _photoUrl,
+    currentUser ? currentUser.id : '',
+    `${dd}/${mm}/${yyyy}`
+  );
+
+  // Add to activity log
+  const dotMap = {'Done':'d','In Progress':'p','Not Started':'n','Dropped':'r'};
+  activityLog.unshift({
+    dot: dotMap[selectedStatus]||'d',
+    text: `<b>${currentFarmer.name}</b> — <span>${step} ${STEPS_META[step].name} → ${selectedStatus}</span>`,
+    time: 'Just now'
+  });
+  if (activityLog.length > 10) activityLog.pop();
+
+  toast(`${STEPS_META[step].name} updated to "${selectedStatus}"`);
+
+  // Reset update box
+  selectedStatus = null;
+  document.querySelectorAll('.s-btn').forEach(b=>b.className='s-btn');
+  document.getElementById('upd-notes').value = '';
+  document.getElementById('pzone').className = 'photo-zone';
+  document.getElementById('pzone-lbl').textContent = 'Tap to take or upload photo';
+  document.getElementById('pzone-fn').textContent = '';
+
+  // Refresh step list and progress
+  renderStepsList(currentFarmer);
+  const done = countDone(currentFarmer);
+  document.getElementById('d-prog-num').textContent = `${done}/8`;
+  document.getElementById('d-prog-bar').style.width = (done/8*100)+'%';
+
+  // Advance to next pending step
+  const next = getNextStep(currentFarmer);
+  document.getElementById('upd-step').value = next;
+  document.getElementById('update-box-sub').textContent = STEPS_META[next]?.tip || 'All steps complete';
+}
+
+// ══════════════════════════════════════════
+// STEP MODAL
+// ══════════════════════════════════════════
+function openStepModal(code) {
+  const m = STEPS_META[code];
+  document.getElementById('m-badge').innerHTML = `<span class="badge" style="background:${STEP_COLORS[code]}20;color:${STEP_COLORS[code]};font-size:11px">${code}</span>`;
+  document.getElementById('m-title').textContent = m.name;
+  document.getElementById('m-sub').textContent = currentFarmer ? `${currentFarmer.name} — current: ${currentFarmer.steps[code]}` : '';
+  document.getElementById('m-tips').innerHTML = `<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:12px;color:var(--text2);line-height:1.6">${m.tip}</div>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function maybeCloseModal(e) { if (e.target===document.getElementById('modal')) closeModal(); }
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function drillFromStep(stepCode) {
+  // Navigate to home filtered by this step completed
+  activeStepFilter = stepCode;
+  activeDistrict = null;
+  activeTaluka = null;
+  // Click the matching chip
+  showScreen('home');
+  setTimeout(()=>{
+    const chips = document.querySelectorAll('#step-filter-chips .loc-chip');
+    chips.forEach(c=>c.classList.remove('on'));
+    const target = [...chips].find(c=>c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+stepCode+"'"));
+    if (target) target.classList.add('on');
+    renderFarmerList();
+  }, 50);
+}
+
+function navigateFromKpi(type) {
+  // Set appropriate filter and navigate to home
+  activeStepFilter = null;
+  activeDistrict = null;
+  activeTaluka = null;
+  // Store a temp filter type for renderFarmerList
+  window._kpiFilter = type;
+  showScreen('home');
+  setTimeout(()=>{ window._kpiFilter = null; }, 100);
+}
+
+function renderDashboard() {
+  const t    = FARMERS.length;
+  const totalBigha = FARMERS.reduce((sum,f)=>sum+(parseFloat(f.convert)||0),0);
+  const now    = Date.now();
+  const days45 = 45 * 24 * 60 * 60 * 1000;
+  // Active = has lastUpdated within 45 days AND at least one step not "Not Started"
+  const active = FARMERS.filter(f => {
+    if (!f.lastUpdated) return false;
+    const parts = f.lastUpdated.split('/');
+    if (parts.length !== 3) return false;
+    const d = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+    const hasProg = Object.values(f.steps).some(s => s !== 'Not Started');
+    return hasProg && (now - d.getTime()) < days45;
+  }).length;
+  const drop = FARMERS.filter(f=>Object.values(f.steps).includes('Dropped')).length;
+
+  document.getElementById('k1').textContent = t;
+  document.getElementById('k2').textContent = totalBigha % 1 === 0 ? totalBigha : totalBigha.toFixed(1);
+  document.getElementById('k3').textContent = active;
+  document.getElementById('k4').textContent = drop;
+
+  document.getElementById('step-progs').innerHTML = STEP_ORDER.map(s=>{
+    const cnt = FARMERS.filter(f=>f.steps[s]==='Done').length;
+    const pct = t ? Math.round(cnt/t*100) : 0;
+    return `<div class="prog-row" style="cursor:pointer" onclick="drillFromStep('${s}')">
+      <div class="prog-lbl">${s}: ${STEPS_META[s].name}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:11px;color:var(--text2);font-weight:600">${cnt} farmers</div>
+        <div class="prog-pct">${pct}%</div>
+        <div style="font-size:13px;color:var(--text3)">›</div>
+      </div>
+    </div>
+    <div class="prog-bar2" style="margin-bottom:10px"><div class="prog-fill2" style="width:${pct}%;background:${STEP_COLORS[s]}"></div></div>`;
+  }).join('');
+
+  document.getElementById('log-card').innerHTML = activityLog.slice(0,5).map(l=>
+    `<div class="log-row"><div class="log-dot ${l.dot}"></div><div class="log-txt">${l.text}</div><div class="log-time">${l.time}</div></div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════
+// ROLE TOGGLE
+// ══════════════════════════════════════════
+function toggleRole() { logout(); }
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-survey-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-season-date').value = new Date().toISOString().slice(0,10);
+  populateDistrictDropdown();
+  // renderHome() called after login
+});
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// Paste your Apps Script deployment URL below
+// ═══════════════════════════════════════════════════════════
+const SCRIPT_URL = '1vfJEpXa2DI-b_t6HISf5ty841FR7F7ro_TpyPyt1G7A';
+
+let isOnline = navigator.onLine;
+window.addEventListener('online',  () => { isOnline = true;  drainQueue(); });
+window.addEventListener('offline', () => { isOnline = false; });
+
+// ── Sync banner ──
+function showBanner(msg, type) {
+  let b = document.getElementById('sync-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'sync-banner';
+    b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;z-index:9999;padding:7px 16px;font-size:12px;font-weight:600;text-align:center;font-family:Sora,sans-serif;transition:all .3s';
+    document.body.appendChild(b);
+  }
+  const styles = {
+    success: ['#E8F5E9','#1B5E20'],
+    error:   ['#FFEBEE','#B71C1C'],
+    syncing: ['#FFF8E1','#7D5A00'],
+  };
+  const [bg, fg] = styles[type] || styles.syncing;
+  b.style.background = bg;
+  b.style.color = fg;
+  b.style.display = 'block';
+  b.textContent = msg;
+  if (type === 'success') setTimeout(() => b.style.display = 'none', 3000);
+}
+
+// ── Offline queue ──
+function getQueue()    { try { return JSON.parse(localStorage.getItem('krsf_q') || '[]'); } catch { return []; } }
+function saveQueue(q)  { try { localStorage.setItem('krsf_q', JSON.stringify(q)); } catch {} }
+function addToQueue(p) { const q = getQueue(); q.push(p); saveQueue(q); }
+
+// ── API call via JSONP — works around CORS completely ──
+function callScript(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const script = document.createElement('script');
+    const timer  = setTimeout(() => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('timeout'));
+    }, 15000);
+    window[cbName] = (data) => {
+      clearTimeout(timer);
+      delete window[cbName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    const qs = Object.entries({ ...params, callback: cbName })
+      .map(([k,v]) => k + '=' + encodeURIComponent(typeof v === 'object' ? JSON.stringify(v) : v))
+      .join('&');
+    script.src = SCRIPT_URL + '?' + qs;
+    script.onerror = () => { clearTimeout(timer); reject(new Error('script error')); };
+    document.body.appendChild(script);
+  });
+}
+async function apiPost(payload) {
+  return await callScript({ data: JSON.stringify(payload) });
+}
+
+// ── Load farmers from Sheet on login ──
+async function loadFarmersFromSheet() {
+  if (!isOnline || SCRIPT_URL.includes('YOUR_')) return;
+  try {
+    showBanner('Loading data from Google Sheets…', 'syncing');
+    const data = await callScript({ action: 'getFarmers' });
+    if (data.farmers && data.farmers.length > 0) {
+      data.farmers.forEach(sf => {
+        const idx = FARMERS.findIndex(f => f.id === sf.id);
+        if (idx >= 0) FARMERS[idx] = { ...FARMERS[idx], ...sf };
+        else FARMERS.push(sf);
+      });
+      renderHome();
+      showBanner('Synced from Google Sheets ✓', 'success');
+    } else {
+      showBanner('', 'success');
+    }
+  } catch(e) {
+    showBanner('Offline — working locally', 'error');
+  }
+}
+
+// ── Sync step update ──
+async function syncStepUpdate(farmerId, stepCode, status, notes, photoUrl, fcId, lastUpdated) {
+  const payload = { action:'updateStep', farmerId, stepCode, status, notes, photoUrl, fcId, lastUpdated };
+  if (!isOnline || SCRIPT_URL.includes('YOUR_')) { addToQueue(payload); return; }
+  try {
+    showBanner('Syncing…', 'syncing');
+    await apiPost(payload);
+    showBanner('Saved to Google Sheets ✓', 'success');
+  } catch(e) {
+    addToQueue(payload);
+    showBanner('Saved locally — will sync when online', 'error');
+  }
+}
+
+// ── Sync new farmer ──
+async function syncNewFarmer(farmer) {
+  const payload = { action:'addFarmer', farmer };
+  if (!isOnline || SCRIPT_URL.includes('YOUR_')) { addToQueue(payload); return; }
+  try {
+    await apiPost(payload);
+  } catch(e) {
+    addToQueue(payload);
+  }
+}
+
+// ── Upload photo ──
+async function uploadPhotoToDrive(file, fileName) {
+  if (!isOnline || SCRIPT_URL.includes('YOUR_') || !file) return null;
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result.split(',')[1];
+        const data = await apiPost({ action:'uploadPhoto', base64Data:base64, fileName, mimeType: file.type || 'image/jpeg' });
+        resolve(data.url || null);
+      } catch { resolve(null); }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Drain offline queue ──
+async function drainQueue() {
+  const q = getQueue();
+  if (!q.length) return;
+  showBanner(`Syncing ${q.length} offline update(s)…`, 'syncing');
+  const remaining = [];
+  for (const item of q) {
+    try { await apiPost(item); }
+    catch { remaining.push(item); }
+  }
+  saveQueue(remaining);
+  if (!remaining.length) showBanner('All updates synced ✓', 'success');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
